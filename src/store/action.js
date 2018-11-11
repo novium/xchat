@@ -1,10 +1,12 @@
 export default class Action {
-    constructor() {
+    actions;
 
+    constructor(actions) {
+        this.actions = actions;
     }
 
     //
-    call(action) {
-
+    call(action, context, object) {
+        this.actions.action(context, object);
     }
 }
