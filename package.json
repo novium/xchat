@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/novium/xchat#readme",
   "scripts": {
-    "start": "node $NODE_DEBUG_OPTION --use_strict src/start.js",
+    "start": "node --use_strict src/start.js",
     "test": "ava",
     "build": "babel src/ -d _build/",
     "flow": "flow",
