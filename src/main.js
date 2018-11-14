@@ -1,5 +1,7 @@
 import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
+import Net from "./net/net";
+
 require("babel-polyfill");
 
 class Main {
@@ -31,9 +33,10 @@ class Main {
                 const roomName = await term.inputField({ minLength: 3 }).promise;
                 term('\n\n');
                 term.grey('Joining the room ' + roomName + '...\n');
-
+                // Vi använder DHT för att utifrån roomName få port och IP
                 term.bar(0.1);
 
+                let net = new Net();
 
                 break;
 
