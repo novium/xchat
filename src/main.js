@@ -38,6 +38,8 @@ class Main {
 
                 let net = new Net();
 
+
+
                 break;
 
             case 'Quit':
