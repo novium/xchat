@@ -73,7 +73,7 @@ export default class Store {
     }
 
     /**
-     * Gets vaules from state
+     * Gets values from state
      *
      * @param getter name of getter
      * @param args optional arguments
@@ -87,7 +87,7 @@ export default class Store {
         return this.#history;
     }
 
-    _setState(field, value) {
+    _setState(field : String, value : Object) {
         this.#state[field] = value;
     }
 }
