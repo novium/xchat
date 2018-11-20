@@ -5,56 +5,91 @@ import Net from "./net/net";
 require("babel-polyfill");
 
 class Main {
-    static term = terminalKit.terminal;
+  static term = terminalKit.terminal;
 
-    static async main() {
-        try {
-            let term = this.term;
+  static async main() {
+    try {
+      let term = this.term;
 
-            term.windowTitle('xChat - not connected');
-            term('Welcome to ');
-            term.red('xChat \n');
+      term.windowTitle('xChat - not connected');
+      term('Welcome to ');
+      term.red('xChat \n');
 
-            while(true) {
-                await Main.menu(term);
-            }
+      while(true) {
+        await Main.menu(term);
+      }
 
-            process.exit(0);
-        } catch(err) {}
-    }
+      process.exit(0);
+    } catch(err) {}
+  }
 
-    static async menu(term) {
-        let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
+  static async menu(term) {
+    let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
 
-        switch(choice.selectedText) {
-            case 'Connect':
-                term.windowTitle('xChat - enter room name');
-                term('\n room name: ');
-                const roomName = await term.inputField({ minLength: 3 }).promise;
-                term('\n\n');
-                term.grey('Joining the room ' + roomName + '...\n');
-                // Vi använder DHT för att utifrån roomName få port och IP
-                term.bar(0.1);
+    switch(choice.selectedText) {
+      case 'Connect':
+      term.windowTitle('xChat - enter room name');
+      term('\n room name: ');
+      const roomName = await term.inputField({ minLength: 3 }).promise;
+      term('\n\n');
 
-                let net = new Net();
+      term.windowTitle('xChat - enter user name');
+      term('\n user name: ');
+      const userName = await term.inputField({ minLength: 3 }).promise;
+      term('\n\n');
 
 
+      term.grey(userName + ' is joining the room ' + roomName + '...\n');
+      // Vi använder DHT för att utifrån roomName få port och IP
+      term.bar(0.1);
 
-                break;
+      let net = new Net();
 
-            case 'Quit':
-                process.exit(0);
-                break;
+      term('\n\n');
+      term.grey('Previous log: ' + net.msgLog[0]);
+      term('\n\n');
+
+      let userActive = true;
+      while(userActive) {
+        let choice2 = await term.singleColumnMenu(['Write', 'Leave']).promise;
+        switch(choice2.selectedText) {
+          case 'Write':
+          term('\n Write your message: ');
+          const newMessage = await term.inputField({ minLength: 1 }).promise;
+          term('\n\n');
+
+          net.msgLog.push(newMessage);
+
+          term('\n');
+          term.grey('Log:\n' + net.msgLog[net.msgLog.length - 1]);
+          term('\n\n');
+          break;
+
+          case 'Leave':
+          term.grey(userName + ' is leaving the room ' + roomName + '...\n');
+          userActive = false;
+          break;
+
         }
+      }
+
+
+      break;
+
+
+      case 'Quit':
+      process.exit(0);
+      break;
     }
+  }
 
 
 }
 
 
 process.on('unhandledRejection', (err) => {
-    console.error(err)
-    process.exit(1)
+  console.error(err)
+  process.exit(1)
 })
 
 

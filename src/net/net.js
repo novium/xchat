@@ -3,7 +3,7 @@ import net from 'net';
 export default class Net {
 
   server = {};
-
+  msgLog = [];
   constructor(){
     this.server = net.createServer((socket) => {
       //'connection' listener
