@@ -19,7 +19,7 @@
   "homepage": "https://github.com/novium/xchat#readme",
   "scripts": {
     "start": "node $NODE_DEBUG_OPTION --use_strict src/start.js",
-    "test": "ava",
+    "test": "node $NODE_DEBUG_OPTION node_modules/.bin/ava",
     "build": "babel src/ -d _build/",
     "flow": "flow",
     "docs": "./node_modules/.bin/documentation build src/** -f html -o docs"
@@ -27,6 +27,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "chalk": "^2.4.1",
+    "lodash": "^4.17.11",
     "terminal-kit": "^1.26.4"
   },
   "devDependencies": {
