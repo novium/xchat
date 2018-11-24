@@ -58,7 +58,39 @@ class Main {
           const newMessage = await term.inputField({ minLength: 1 }).promise;
           term('\n\n');
 
-          net.msgLog.push(newMessage);
+          var timestamp = Date.now();
+          net.msgLog.push([newMessage, timestamp]);
+          console.log(timestamp);
+
+          /*
+          //Detta skulle vara kod för att
+          datevalues = [
+          timestamp.getFullYear(),
+          timestamp.getMonth()+1,
+          timestamp.getDate(),
+          timestamp.getHours(),
+          timestamp.getMinutes(),
+          timestamp.getSeconds(),
+          ];
+          */
+
+          /*
+          //Detta skulle vara kod för att loopa igenom igenom loggen
+          // och printa raderna som : year month day time usename message
+          var logLength = net.msgLog.length;
+          console.log(2);
+          while (logLength > 0) {
+            console.log(3);
+            console.log(length);
+            console.log('item at length: ' + net.msgLog[length-1]);
+
+            var logItem = net.msgLog[length-1]
+            term.red(logItem[1] + ' ');
+            tem.green(userName + ' ');
+            term.grey(logItem[0]);
+            console.log(4);
+          }
+          */
 
           term('\n');
           term.grey('Log:\n' + net.msgLog[net.msgLog.length - 1]);
@@ -91,6 +123,5 @@ process.on('unhandledRejection', (err) => {
   console.error(err)
   process.exit(1)
 })
-
 
 Main.main();
