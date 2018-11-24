@@ -43,10 +43,10 @@ test('new message', t => {
     store.observe('messages', observeMessages);
 
     store.dispatch('newMessage', 'Hello world!');
-    //t.deepEqual(store.get('getMessages'), ['Hello world!']);
+    t.deepEqual(store.get('getMessages'), ['Hello world!']);
 
     store.dispatch('newMessage', 'Hello world again!!!');
-    //t.deepEqual(store.get('getMessages'), ['Hello world!', 'Hello world again!!!']);
+    t.deepEqual(store.get('getMessages'), ['Hello world!', 'Hello world again!!!']);
 
-    t.pass();
+    //t.pass();
 });

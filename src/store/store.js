@@ -9,6 +9,7 @@ export default class Store {
      * @private
      */
     _state     = {};
+    _orig = {};
 
     /**
      * Actions
@@ -47,10 +48,14 @@ export default class Store {
      * @param getters getters for the state
      */
     constructor(state : Object, actions : Object, mutations : Object, getters : Object) : void {
+        let copy = _.cloneDeep(state);
+
+        this._orig = copy;
         this._state     = Object.assign(
             this._state,
-            new Proxy(_.cloneDeep(state), Store._general_handlers)
+            new Proxy(copy, Store._general_handlers)
         );
+
         this._actions   = actions;
         this._mutations = mutations;
         this._getters   = getters;
@@ -58,8 +63,8 @@ export default class Store {
 
     static _general_handlers = {
         get(target, property, receiver) {
-            if(target[property] == undefined || property == '_observers') {
-                return target;
+            if(target[property] === undefined) {
+                return undefined;
             }
 
             // TODO: Remove array check!
@@ -122,24 +127,34 @@ export default class Store {
      * @returns {*}
      */
     get(getter : string, ...args) : Object {
-        return this._getters[getter](this._state, args);
+
+        let state = _.cloneDeep(this._orig);
+        for(let v in state) {
+            if(v instanceof Object) {
+                for(let vp in v) {
+                    if(Array.isArray(vp)) delete vp._observers;
+                }
+            }
+        }
+
+        return this._getters[getter](state, args);
     }
 
     observe(key, callback) {
         if(Array.isArray(this._state[key])) {
-            if(this._state[key].prototype._observers === undefined) {
-                this._state[key].prototype._observers = [callback];
+            if(this._orig[key]._observers === undefined) {
+                this._orig[key]._observers = [callback];
             } else {
-                this._state[key].prototype._observers.push(callback)
+                this._orig[key]._observers.push(callback)
             }
 
             return;
         }
 
-        if(this._state[key].hasOwnProperty(key)) {
-            this._state[key].push(callback);
+        if(this._orig[key].hasOwnProperty(key)) {
+            this._orig[key].push(callback);
         } else {
-            Object.assign(this._state, { [key]: callback});
+            Object.assign(this._orig, { [key]: callback});
         }
     }
 
