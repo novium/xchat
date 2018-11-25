@@ -1,7 +1,6 @@
 import net from 'net';
 
 export default class Net {
-
   server = {};
   msgLog = [];
   constructor(){
