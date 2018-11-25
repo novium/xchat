@@ -38,7 +38,7 @@ class Main {
       const userName = await term.inputField({ minLength: 3 }).promise;
       term('\n\n');
 
-
+      term.windowTitle('xChat - Chatting in: ' + roomName);
       term.grey(userName + ' is joining the room ' + roomName + '...\n');
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
@@ -99,6 +99,7 @@ class Main {
 
           case 'Leave':
           term.grey(userName + ' is leaving the room ' + roomName + '...\n');
+          term.windowTitle('xChat - not connected');
           userActive = false;
           break;
 

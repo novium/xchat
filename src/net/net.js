@@ -15,7 +15,7 @@ export default class Net {
       socket.pipe(socket);
     });
 
-    
+
 
     //server.on('error', (err) => {
     //  throw err; });
