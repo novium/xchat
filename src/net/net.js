@@ -15,12 +15,7 @@ export default class Net {
       socket.pipe(socket);
     });
 
-    // port number is gained from UPnP
-    const port = 8080;
-
-    this.server.listen(port, () => {
-      console.log('Listening to port: ' + port);
-    })
+    
 
     //server.on('error', (err) => {
     //  throw err; });

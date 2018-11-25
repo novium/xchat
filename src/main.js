@@ -45,6 +45,24 @@ class Main {
 
       let net = new Net();
 
+      // port number is gained from UPnP
+      let port;
+      switch(userName) {
+        case "david":
+            port = 111;
+            break;
+        case "isak":
+            port = 222;
+            break;
+        default:
+            port = 8080;
+      }
+
+      net.server.listen(port, () => {
+        term.grey('Listening to port: ' + port);
+        term('\n\n');
+      });
+      console.log(4);
       term('\n\n');
       term.grey('Previous log: ' + net.msgLog[0]);
       term('\n\n');
