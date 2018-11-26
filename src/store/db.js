@@ -20,16 +20,31 @@ export default class {
                 hash NCHAR(64) PRIMARY KEY,
                 message TEXT,
                 username VARCHAR(64)
-            )
+            );
         `);
     }
 
     async run(...params) {
         try {
-            const res = await this._db.run.apply(this._db, params);
+            return await this._db.run.apply(this._db, params);
         } catch(error) {
-            console.log("THREW ERROR!");
-            return error;
+            throw error;
+        }
+    }
+
+    async get(...params) {
+        try {
+            return await this._db.get.apply(this._db, params);
+        } catch(error) {
+            throw error;
+        }
+    }
+
+    async all(...params) {
+        try {
+            return await this._db.all.apply(this._db, params);
+        } catch(error) {
+            throw error;
         }
     }
 }
