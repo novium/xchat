@@ -1,5 +1,6 @@
 import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
+import Database from './store/db.js';
 require("babel-polyfill");
 
 class Main {
@@ -8,6 +9,9 @@ class Main {
     static async main() {
         try {
             let term = this.term;
+
+            const db = new Database();
+            await db.init();
 
             term.windowTitle('xChat - not connected');
             term('Welcome to ');
