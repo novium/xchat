@@ -40,25 +40,23 @@ class Main {
       term('\n\n');
 
       term.windowTitle('xChat - Chatting in: ' + roomName);
-      term.grey(userName + ' is joining the room ' + roomName + '...\n');
+      term.grey(userName + ' is joining the room ' + roomName + '...\n\n');
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
       let myNet = new Net();
-      //net.connect();
 
       // port number is gained from UPnP
-      term('\n Write your listening port: ');
+      term('\n\n Write your listening port: ');
       const listenPort = await term.inputField({ minLength: 3 }).promise;
+      term('\n\n');
 
-      myNet.server.listen(listenPort, () => {
-        term.grey('opened server on ');
-        console.log( myNet.server.address());
+      await myNet.server.listen(listenPort, () => {
+        term.grey('opened server on ' + listenPort);
         term('\n\n');
       });
 
       let clientConnected = false;
-
       if (listenPort != 111) {
         term('\n Write your connect port: ');
         const connectPort = await term.inputField({ minLength: 3 }).promise;
@@ -66,24 +64,19 @@ class Main {
         var client = new net.Socket();
         clientConnected = true;
         client.connect(connectPort, () => {
-          console.log('Connected');
+          term.grey('Connected');
         });
 
         client.on('data', function(data) {
-          console.log('Data recieved');
-          myNet.msgLog.push(data);
+          myNet.msgLog.push(JSON.parse(data));
           printLog(myNet, term);
 
         });
 
         client.on('close', function() {
-          console.log('Connection closed');
+          term.grey('Connection closed');
         });
       }
-
-      term('\n\n');
-      term.grey('Previous log: ' + myNet.msgLog[0]);
-      term('\n\n');
 
       let userActive = true;
       while(userActive) {
@@ -94,32 +87,17 @@ class Main {
           const newMessage = await term.inputField({ minLength: 1 }).promise;
           term('\n\n');
           var timestamp = new Date();
-          myNet.msgLog.push([timestamp, userName, newMessage]);
+          let data = [timestamp, userName, newMessage];
 
           if (clientConnected) {
-            console.log('Attempt to write');
-            client.write([timestamp, userName, newMessage]);
+            data = JSON.stringify(data);
+            client.write(data);
+          } else {
+            myNet.msgLog.push(data);
           };
-          console.log('after writing');
 
 
           printLog(myNet, term);
-
-          /*
-          term.clear();
-          term.inverse.grey('Chatting in room: ', roomName);
-          term('\n');
-          var logLength = myNet.msgLog.length;
-          var counter = 0;
-          while (counter < logLength) {
-            var logItem = myNet.msgLog[counter];
-            term.red(logItem[1].toUTCString() + ' ');
-            term.green(userName + ' ');
-            term.grey(logItem[0]);
-            term('\n')
-            counter = counter + 1;
-          }
-          */
 
           term('\n\n');
           break;
@@ -162,7 +140,7 @@ function printLog(net, term) {
   var counter = 0;
   while (counter < logLength) {
     var logItem = net.msgLog[counter];
-    term.red(logItem[0].toUTCString() + ' ');
+    term.red(logItem[0] + ' ');
     term.green(logItem[1] + ' ');
     term.grey(logItem[2]);
     term('\n')
