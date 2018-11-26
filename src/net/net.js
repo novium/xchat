@@ -2,6 +2,7 @@ import net from 'net';
 
 export default class Net {
   server = {};
+  // msgLog = [timesamp,username, message]
   msgLog = [];
   constructor(){
     this.server = net.createServer((socket) => {
@@ -11,7 +12,8 @@ export default class Net {
       socket.on('end', () => {
       console.log('client disconnected');
       });
-      socket.write('hello\r\n');
+      var timestamp = new Date();
+      //socket.write([timestamp, "server", "Welcome to server"]);
       socket.pipe(socket);
     });
 

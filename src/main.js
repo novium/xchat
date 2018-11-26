@@ -48,41 +48,38 @@ class Main {
       //net.connect();
 
       // port number is gained from UPnP
-      let port;
-      switch(userName) {
-        case "david":
-            port = 111;
-            break;
-        case "isak":
-            port = 222;
-            break;
-        default:
-            port = 8080;
-      }
+      term('\n Write your listening port: ');
+      const listenPort = await term.inputField({ minLength: 3 }).promise;
 
-      myNet.server.listen(port, () => {
+      myNet.server.listen(listenPort, () => {
         term.grey('opened server on ');
         console.log( myNet.server.address());
         term('\n\n');
       });
 
-      var client = new net.Socket();
-      client.connect(8080, () => {
-        console.log('Connected');
-        client.write('Hello world!');
-        console.log('connection done');
-      });
-      console.log(2);
+      let clientConnected = false;
 
-      client.on('data', function(data) {
-        console.log('Recieved: ' + data);
-      });
-      console.log(3);
+      if (listenPort != 111) {
+        term('\n Write your connect port: ');
+        const connectPort = await term.inputField({ minLength: 3 }).promise;
 
-      client.on('close', function() {
-        console.log('Connection closed');
-      });
-      console.log(4);
+        var client = new net.Socket();
+        clientConnected = true;
+        client.connect(connectPort, () => {
+          console.log('Connected');
+        });
+
+        client.on('data', function(data) {
+          console.log('Data recieved');
+          myNet.msgLog.push(data);
+          printLog(myNet, term);
+
+        });
+
+        client.on('close', function() {
+          console.log('Connection closed');
+        });
+      }
 
       term('\n\n');
       term.grey('Previous log: ' + myNet.msgLog[0]);
@@ -96,14 +93,22 @@ class Main {
           term('\n Write your message: ');
           const newMessage = await term.inputField({ minLength: 1 }).promise;
           term('\n\n');
-
           var timestamp = new Date();
-          myNet.msgLog.push([newMessage, timestamp]);
+          myNet.msgLog.push([timestamp, userName, newMessage]);
 
+          if (clientConnected) {
+            console.log('Attempt to write');
+            client.write([timestamp, userName, newMessage]);
+          };
+          console.log('after writing');
+
+
+          printLog(myNet, term);
+
+          /*
           term.clear();
           term.inverse.grey('Chatting in room: ', roomName);
           term('\n');
-
           var logLength = myNet.msgLog.length;
           var counter = 0;
           while (counter < logLength) {
@@ -114,6 +119,7 @@ class Main {
             term('\n')
             counter = counter + 1;
           }
+          */
 
           term('\n\n');
           break;
@@ -145,5 +151,24 @@ process.on('unhandledRejection', (err) => {
   console.error(err)
   process.exit(1)
 })
+
+function printLog(net, term) {
+
+  term.clear();
+  //term.inverse.grey('Chatting in room: ', roomName);
+  term('\n');
+
+  var logLength = net.msgLog.length;
+  var counter = 0;
+  while (counter < logLength) {
+    var logItem = net.msgLog[counter];
+    term.red(logItem[0].toUTCString() + ' ');
+    term.green(logItem[1] + ' ');
+    term.grey(logItem[2]);
+    term('\n')
+    counter = counter + 1;
+  }
+
+}
 
 Main.main();
