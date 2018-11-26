@@ -79,7 +79,7 @@ export default class Store {
             }
         },
 
-        set: function(target, property, value, receiver) {
+        set(target, property, value, receiver) {
             target[property] = value;
 
             // Array observers need special treatment since they need to be prototypes
