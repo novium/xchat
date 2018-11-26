@@ -1,6 +1,7 @@
 import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
+import net from 'net';
 
 require("babel-polyfill");
 
@@ -38,12 +39,13 @@ class Main {
       const userName = await term.inputField({ minLength: 3 }).promise;
       term('\n\n');
 
-
+      term.windowTitle('xChat - Chatting in: ' + roomName);
       term.grey(userName + ' is joining the room ' + roomName + '...\n');
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
-      let net = new Net();
+      let myNet = new Net();
+      //net.connect();
 
       // port number is gained from UPnP
       let port;
@@ -58,13 +60,32 @@ class Main {
             port = 8080;
       }
 
-      net.server.listen(port, () => {
-        term.grey('Listening to port: ' + port);
+      myNet.server.listen(port, () => {
+        term.grey('opened server on ');
+        console.log( myNet.server.address());
         term('\n\n');
       });
+
+      var client = new net.Socket();
+      client.connect(8080, () => {
+        console.log('Connected');
+        client.write('Hello world!');
+        console.log('connection done');
+      });
+      console.log(2);
+
+      client.on('data', function(data) {
+        console.log('Recieved: ' + data);
+      });
+      console.log(3);
+
+      client.on('close', function() {
+        console.log('Connection closed');
+      });
       console.log(4);
+
       term('\n\n');
-      term.grey('Previous log: ' + net.msgLog[0]);
+      term.grey('Previous log: ' + myNet.msgLog[0]);
       term('\n\n');
 
       let userActive = true;
@@ -77,16 +98,16 @@ class Main {
           term('\n\n');
 
           var timestamp = new Date();
-          net.msgLog.push([newMessage, timestamp]);
+          myNet.msgLog.push([newMessage, timestamp]);
 
           term.clear();
           term.inverse.grey('Chatting in room: ', roomName);
           term('\n');
 
-          var logLength = net.msgLog.length;
+          var logLength = myNet.msgLog.length;
           var counter = 0;
           while (counter < logLength) {
-            var logItem = net.msgLog[counter];
+            var logItem = myNet.msgLog[counter];
             term.red(logItem[1].toUTCString() + ' ');
             term.green(userName + ' ');
             term.grey(logItem[0]);
@@ -99,6 +120,7 @@ class Main {
 
           case 'Leave':
           term.grey(userName + ' is leaving the room ' + roomName + '...\n');
+          term.windowTitle('xChat - not connected');
           userActive = false;
           break;
 
