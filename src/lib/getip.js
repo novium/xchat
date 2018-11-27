@@ -1,42 +1,80 @@
 import { promises as dns } from 'dns';
-import dgram from 'dgram';
-import Buffer from 'buffer';
-require("babel-polyfill");
+import URL from 'url';
+import hexy from 'hexy';
 
-import DHT from 'bittorrent-dht';
+import dgram from 'dgram';
+require("babel-polyfill");
 
 export default class {
     static async getIP() {
+        return new Promise((resolve, reject) => {
+
         // TODO: IPv6 Support
         const server = dgram.createSocket('udp4');
+        server.bind();
+        server.ref();
 
-        let buffer = Buffer.alloc(200);
+        const addr = encodeURI('o-o.myaddr.l.google.com').split('.');
 
-        const id        = 0b0000000000000000;
-        const QR        = 0b0;
-        const Opcode    = 0b0000;
-        const AA        = 0b0;
-        const TC        = 0b0;
-        const RD        = 0b0;
-        const RA        = 0b0;
-        const Z         = 0b000;
-        const RCODE     = 0b0000;
-        const QDCOUNT   = 0b0000000000000000;
-        const ANCOUNT   = 0b0000000000000000;
-        const NSCOUNT   = 0b0000000000000000;
-        const ARCOUNT   = 0b0000000000000000;
+        const buffer = Buffer.alloc(12 + 4 + addr.join('').length + addr.length * 2 - 1);
+
+        const id        = 0b1010010100101001; // Random ID
+        const QR        = 0b0               ; // Query / Response
+        const Opcode    = 0b0000            ; // Operation
+        const AA        = 0b0               ; // Not important
+        const TC        = 0b0               ; // Truncation
+        const RD        = 0b1               ; // Recursion
+        const RA        = 0b0               ; // Recursion available (not important)
+        const Z         = 0b000             ; // Not important
+        const RCODE     = 0b0000            ; // Not important
+        const QDCOUNT   = 0b0000000000000001; // # Queries
+        const ANCOUNT   = 0b0000000000000000; // # Responses
+        const NSCOUNT   = 0b0000000000000000; // Not important
+        const ARCOUNT   = 0b0000000000000000; // Not important
 
         const offset16 = (QR) | (Opcode >>> 1) | (AA >>> 5) | (TC >>> 6)
             | (RD >>> 7) | (RA >>> 8) | (Z >>> 9) | (RCODE >>> 12);
 
-        buffer.writeInt16BE(id, 0); // ID
-        buffer.writeInt16BE(offset16, 16);
-        buffer.writeInt16BE(QDCOUNT, 32);
-        buffer.writeInt16BE(ANCOUNT, 48);
-        buffer.writeInt16BE(NSCOUNT, 64);
-        buffer.writeInt16BE(ARCOUNT, 96);
+        buffer.writeUInt16BE(id, 0); // ID
+        buffer.writeUInt16BE(offset16, 2);
+        buffer.writeUInt16BE(QDCOUNT, 4);
+        buffer.writeUInt16BE(ANCOUNT, 6);
+        buffer.writeUInt16BE(NSCOUNT, 8);
+        buffer.writeUInt16BE(ARCOUNT, 10);
 
-        server.close();
+        let offset = 12;
+        for(let i = 0; i < addr.length; i++) {
+            buffer.writeInt8(addr[i].length, offset);
+            buffer.write(addr[i], offset + 1, 'ascii');
+            offset += addr[i].length + 1;
+        }
+        buffer.writeUInt8(0b00000000, offset);
+
+        buffer.writeUInt16BE(16, offset + 1);
+        buffer.writeUInt16BE(0b00000001, offset + 3);
+
+        let received = false;
+
+        server.on('message', (msg, rinfo) => {
+            received = true;
+            console.log('server got: ');
+            console.log(hexy.hexy(msg))
+            resolve(true);
+            //server.close();
+        });
+
+        server.on('error', (err) => {
+            console.error(err);
+        });
+
+        server.send(buffer, 53, 'ns1.google.com', (err) => {
+            if(err != null)
+                console.log('send error: ' + err);
+        });
+
+        console.log(hexy.hexy(buffer));
+
+        });
     }
 }
 
