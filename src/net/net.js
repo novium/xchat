@@ -2,10 +2,16 @@ import net from 'net';
 import terminalKit from 'terminal-kit';
 
 export default class Net {
+  onPacket;
+  portList;
+  term;
+  server;
+  connectedClients;
 
   constructor(onPacket){
     this.connectedClients = [];
     this.portList = [];
+    this.onPacket = onPacket;
     this.term = terminalKit.terminal;
     this.server = net.createServer((socket) => {
       //'connection' listener
@@ -15,9 +21,9 @@ export default class Net {
       console.log('client disconnected');
       });
 
-      socket.on('data', function(data) {
+      socket.on('data', (data) => {
         console.log('Server data: ', JSON.parse(data));
-        //onPacket(JSON.parse(data));
+        this.onPacket(JSON.parse(data));
 
       });
       socket.pipe(socket);
@@ -33,7 +39,7 @@ export default class Net {
     this.portList.push(port);
   };
 
-  startConnections(onPacket) {
+  startConnections() {
     let arrayLength = this.portList.length;
     for (let i = 0; i < arrayLength; i++) {
       let client = new net.Socket();
@@ -41,9 +47,9 @@ export default class Net {
         this.term.grey('Connected');
       });
 
-      client.on('data', function(data) {
+      client.on('data', (data) => {
         console.log('Client data: ', JSON.parse(data));
-        //onPacket(JSON.parse(data));
+        this.onPacket(JSON.parse(data));
       });
 
 

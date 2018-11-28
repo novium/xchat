@@ -8,6 +8,7 @@ require("babel-polyfill");
 
 class Main {
   static term = terminalKit.terminal;
+  static msgLog = [];
 
   static async main() {
     try {
@@ -47,7 +48,7 @@ class Main {
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
-      let net = new Net(user.addMsg);
+      let net = new Net(this.msgLog.push);
 
       // port number is gained from UPnP
       term('\n\n Write your listening port: ');
@@ -59,11 +60,11 @@ class Main {
         term('\n\n');
       });
 
-      if (listenPort != 111) {
+      if (listenPort != 1111) {
         const connectPort = await term.inputField({ minLength: 3 }).promise;
-        net.addPort(111);
+        net.addPort(1111);
       }
-      net.startConnections(user.addMsg);
+      net.startConnections();
 
       let userActive = true;
       while(userActive) {
