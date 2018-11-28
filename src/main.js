@@ -47,7 +47,7 @@ class Main {
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
-      let net = new Net(onPackage);
+      let net = new Net(user.addMsg);
 
       // port number is gained from UPnP
       term('\n\n Write your listening port: ');
@@ -63,7 +63,7 @@ class Main {
         const connectPort = await term.inputField({ minLength: 3 }).promise;
         net.addPort(111);
       }
-      net.startConnections(onPackage);
+      net.startConnections(user.addMsg);
 
       let userActive = true;
       while(userActive) {

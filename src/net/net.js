@@ -16,9 +16,8 @@ export default class Net {
       });
 
       socket.on('data', function(data) {
-        console.log('Got to server.socket.on');
         console.log('Server data: ', JSON.parse(data));
-        onPacket(JSON.parse(data));
+        //onPacket(JSON.parse(data));
 
       });
       socket.pipe(socket);
@@ -43,8 +42,8 @@ export default class Net {
       });
 
       client.on('data', function(data) {
-        console.log('Client data: ', data);
-        onPacket(JSON.parse(data));
+        console.log('Client data: ', JSON.parse(data));
+        //onPacket(JSON.parse(data));
       });
 
 
