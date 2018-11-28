@@ -1,6 +1,7 @@
 import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
+import User from './user';
 import net from 'net';
 
 require("babel-polyfill");
@@ -39,44 +40,30 @@ class Main {
       const userName = await term.inputField({ minLength: 3 }).promise;
       term('\n\n');
 
-      term.windowTitle('xChat - Chatting in: ' + roomName);
-      term.grey(userName + ' is joining the room ' + roomName + '...\n\n');
+      let user = new User(userName, roomName);
+
+      term.windowTitle('xChat - Chatting in: ' + user.roomName);
+      term.grey(user.name + ' is joining the room ' + user.roomName + '...\n\n');
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
-      let myNet = new Net();
+      let net = new Net(onPackage);
 
       // port number is gained from UPnP
       term('\n\n Write your listening port: ');
       const listenPort = await term.inputField({ minLength: 3 }).promise;
       term('\n\n');
 
-      await myNet.server.listen(listenPort, () => {
+      await net.server.listen(listenPort, () => {
         term.grey('opened server on ' + listenPort);
         term('\n\n');
       });
 
-      let clientConnected = false;
       if (listenPort != 111) {
-        term('\n Write your connect port: ');
         const connectPort = await term.inputField({ minLength: 3 }).promise;
-
-        var client = new net.Socket();
-        clientConnected = true;
-        client.connect(connectPort, () => {
-          term.grey('Connected');
-        });
-
-        client.on('data', function(data) {
-          myNet.msgLog.push(JSON.parse(data));
-          printLog(myNet, term);
-
-        });
-
-        client.on('close', function() {
-          term.grey('Connection closed');
-        });
+        net.addPort(111);
       }
+      net.startConnections(onPackage);
 
       let userActive = true;
       while(userActive) {
@@ -86,18 +73,10 @@ class Main {
           term('\n Write your message: ');
           const newMessage = await term.inputField({ minLength: 1 }).promise;
           term('\n\n');
-          var timestamp = new Date();
+          let timestamp = new Date();
           let data = [timestamp, userName, newMessage];
-
-          if (clientConnected) {
-            data = JSON.stringify(data);
-            client.write(data);
-          } else {
-            myNet.msgLog.push(data);
-          };
-
-
-          printLog(myNet, term);
+          user.addMsg(data);
+          net.sendData(data);
 
           term('\n\n');
           break;
@@ -111,9 +90,7 @@ class Main {
         }
       }
 
-
       break;
-
 
       case 'Quit':
       process.exit(0);
@@ -121,32 +98,13 @@ class Main {
     }
   }
 
-
 }
-
 
 process.on('unhandledRejection', (err) => {
   console.error(err)
   process.exit(1)
 })
 
-function printLog(net, term) {
 
-  term.clear();
-  //term.inverse.grey('Chatting in room: ', roomName);
-  term('\n');
-
-  var logLength = net.msgLog.length;
-  var counter = 0;
-  while (counter < logLength) {
-    var logItem = net.msgLog[counter];
-    term.red(logItem[0] + ' ');
-    term.green(logItem[1] + ' ');
-    term.grey(logItem[2]);
-    term('\n')
-    counter = counter + 1;
-  }
-
-}
 
 Main.main();
