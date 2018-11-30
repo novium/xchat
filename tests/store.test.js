@@ -32,7 +32,7 @@ const getters = {
 };
 
 function observeMessages(state) {
-    console.log("OBSERVER: " + state);
+    //console.log("OBSERVER: " + state);
 }
 
 test('new message', t => {
