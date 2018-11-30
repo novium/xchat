@@ -6,7 +6,7 @@ import dgram from 'dgram';
 require("babel-polyfill");
 
 export default class {
-    static async getIP() {
+    static getIP() {
         return new Promise((resolve, reject) => {
 
         // TODO: IPv6 Support
@@ -52,27 +52,30 @@ export default class {
 
         buffer.writeUInt16BE(16, offset + 1);
         buffer.writeUInt16BE(0b00000001, offset + 3);
-
-        let received = false;
-
         server.on('message', (msg, rinfo) => {
-            received = true;
-            console.log('server got: ');
-            console.log(hexy.hexy(msg))
-            resolve(true);
-            //server.close();
+            //console.log('server got: ');
+            //console.log(hexy.hexy(msg));
+
+            const res = Buffer.slice(msg, 54).toString('utf-8');
+
+            server.close();
+            resolve(res);
         });
 
         server.on('error', (err) => {
             console.error(err);
+
+            server.close();
         });
 
         server.send(buffer, 53, 'ns1.google.com', (err) => {
-            if(err != null)
+            if (err != null) {
                 console.log('send error: ' + err);
+                reject();
+            }
         });
 
-        console.log(hexy.hexy(buffer));
+        // console.log(hexy.hexy(buffer));
 
         });
     }
