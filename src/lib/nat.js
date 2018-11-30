@@ -17,8 +17,8 @@ export default class {
 
             const client = natpmp.connect(router);
 
-            client.portMapping({private: 2231, public: 2222, ttl: 10}, function (err, info) {
-                if (info.resultCode === 0 && err === null) {
+            client.portMapping({ private: 9090, public: 9090, ttl: 10 }, function (err, info) {
+                if (err === null) {
                     resolve({
                         external: info.external,
                         internal: info.internal
