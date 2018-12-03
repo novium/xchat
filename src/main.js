@@ -7,7 +7,9 @@ import net from 'net';
 require("babel-polyfill");
 
 class Main {
+  static msgLog = []; // Denna ska inte ligga här ;U
   static term = terminalKit.terminal;
+  static user = {};
 
   static async main() {
     try {
@@ -47,7 +49,10 @@ class Main {
       // Vi använder DHT för att utifrån roomName få port och IP
       term.bar(0.1);
 
-      let net = new Net(user.addMsg);
+      let net = new Net((msg) => {
+        this.msgLog.push(msg);
+        user.printLog(this.msgLog);
+      });
 
       // port number is gained from UPnP
       term('\n\n Write your listening port: ');
@@ -60,10 +65,15 @@ class Main {
       });
 
       if (listenPort != 111) {
+        term('\n\n Write your connection port: ');
         const connectPort = await term.inputField({ minLength: 3 }).promise;
+        term('\n\n');
         net.addPort(111);
       }
-      net.startConnections(user.addMsg);
+      net.startConnections((msg) => {
+        this.msgLog.push(msg);
+        user.printLog(this.msgLog);
+      });
 
       let userActive = true;
       while(userActive) {
@@ -75,8 +85,11 @@ class Main {
           term('\n\n');
           let timestamp = new Date();
           let data = [timestamp, userName, newMessage];
-          user.addMsg(data);
+
+          this.msgLog.push(JSON.parse(JSON.stringify(data)));
+          //user.addMsg(data);
           net.sendData(data);
+          user.printLog(this.msgLog);
 
           term('\n\n');
           break;
@@ -96,6 +109,11 @@ class Main {
       process.exit(0);
       break;
     }
+  }
+
+  static addMsg(msg) {
+    this.msgLog.push(msg);
+    user.printLog(this.msgLog);
   }
 
 }

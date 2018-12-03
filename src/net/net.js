@@ -7,20 +7,22 @@ export default class Net {
     this.connectedClients = [];
     this.portList = [];
     this.term = terminalKit.terminal;
+    this.onPacket = onPacket;
     this.server = net.createServer((socket) => {
       //'connection' listener
-      console.log('client connected');
+      this.term('client connected');
 
       socket.on('end', () => {
       console.log('client disconnected');
       });
 
-      socket.on('data', function(data) {
-        console.log('Server data: ', JSON.parse(data));
-        //onPacket(JSON.parse(data));
+      socket.on('data', (data) => {
+        //console.log('Server data: ', JSON.parse(data));
+        this.onPacket(JSON.parse(data));
 
       });
       socket.pipe(socket);
+      this.connectedClients.push(socket);
     });
 
   };
@@ -41,13 +43,13 @@ export default class Net {
         this.term.grey('Connected');
       });
 
-      client.on('data', function(data) {
-        console.log('Client data: ', JSON.parse(data));
-        //onPacket(JSON.parse(data));
+      client.on('data', (data) => {
+        //console.log('Client data: ', JSON.parse(data));
+        this.onPacket(JSON.parse(data));
       });
 
 
-      client.on('close', function() {
+      client.on('close', () => {
         this.term.grey('Connection closed');
       });
       this.connectedClients.push(client);
@@ -57,10 +59,8 @@ export default class Net {
   sendData(data) {
     let arrayLength = this.connectedClients.length;
     for (let i = 0; i< arrayLength; i++) {
-      console.log('before write');
       var client = this.connectedClients[i];
       client.write(JSON.stringify(data));
-      console.log('After write');
     }
   }
 
