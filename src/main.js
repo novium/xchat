@@ -9,7 +9,6 @@ require("babel-polyfill");
 class Main {
   static msgLog = []; // Denna ska inte ligga här ;U
   static term = terminalKit.terminal;
-  static user = {};
 
   static async main() {
     try {
@@ -99,7 +98,6 @@ class Main {
           term.windowTitle('xChat - not connected');
           userActive = false;
           break;
-
         }
       }
 

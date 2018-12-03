@@ -2,10 +2,16 @@ import net from 'net';
 import terminalKit from 'terminal-kit';
 
 export default class Net {
+  onPacket;
+  portList;
+  term;
+  server;
+  connectedClients;
 
   constructor(onPacket){
     this.connectedClients = [];
     this.portList = [];
+    this.onPacket = onPacket;
     this.term = terminalKit.terminal;
     this.onPacket = onPacket;
     this.server = net.createServer((socket) => {
@@ -35,7 +41,7 @@ export default class Net {
     this.portList.push(port);
   };
 
-  startConnections(onPacket) {
+  startConnections() {
     let arrayLength = this.portList.length;
     for (let i = 0; i < arrayLength; i++) {
       let client = new net.Socket();
