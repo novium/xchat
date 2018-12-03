@@ -3,3 +3,5 @@ node_modules
 Thumbs.db
 .DS_store
 _build
+*.sqlite3
+docs/

@@ -19,14 +19,17 @@
   "homepage": "https://github.com/novium/xchat#readme",
   "scripts": {
     "start": "node --use_strict src/start.js",
-    "test": "ava",
+    "test": "node_modules/.bin/ava",
     "build": "babel src/ -d _build/",
     "flow": "flow",
     "docs": "./node_modules/.bin/documentation build src/** -f html -o docs"
   },
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
+    "bittorrent-dht": "^9.0.0",
     "chalk": "^2.4.1",
+    "lodash": "^4.17.11",
+    "sqlite3": "^4.0.4",
     "terminal-kit": "^1.26.4"
   },
   "devDependencies": {
@@ -44,7 +47,8 @@
     "babel-preset-env": "^1.7.0",
     "babel-preset-flow": "^6.23.0",
     "documentation": "^9.0.0-alpha.1",
-    "flow-bin": "^0.86.0"
+    "flow-bin": "^0.86.0",
+    "hexy": "^0.3.0"
   },
   "ava": {
     "require": [

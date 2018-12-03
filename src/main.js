@@ -87,7 +87,6 @@ class Main {
           term.windowTitle('xChat - not connected');
           userActive = false;
           break;
-
         }
       }
 
