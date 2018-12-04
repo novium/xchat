@@ -2,6 +2,7 @@ import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
 import User from './user';
+import Room from './Room';
 import net from 'net';
 
 require("babel-polyfill");
@@ -19,6 +20,7 @@ class Main {
       term.red('xChat \n');
 
       while(true) {
+        term.clear();
         await Main.menu(term);
       }
 
@@ -27,7 +29,7 @@ class Main {
   }
 
   static async menu(term) {
-    let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
+    /*let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
 
     switch(choice.selectedText) {
       case 'Connect':
@@ -95,15 +97,45 @@ class Main {
       case 'Quit':
       process.exit(0);
       break;
+    }*/
+
+    let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
+
+    switch(choice.selectedText) {
+      case 'Connect':
+        await Main.connect(term);
+        return;
+        break;
+
+      case 'Quit':
+      default:
+        process.exit(0);
     }
+
   }
 
+  static async connect(term) {
+    term.clear();
+    term.blue('Room (min. 5): ');
+    let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
+    term.grey('Finding peers...\n');
+    // TODO: Find peers via DHT
+    term.grey('Found %d peers...\n', 5); // TODO: Replace 5 with peers
+    term.grey('Initializing network...\n');
+    // TODO: Connect
+
+    // TODO: Room should access net
+    const room = new Room(term);
+    await room.enter();
+
+    return;
+  }
 }
 
 process.on('unhandledRejection', (err) => {
-  console.error(err)
+  console.error(err);
   process.exit(1)
-})
+});
 
 
 
