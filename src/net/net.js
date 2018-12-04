@@ -1,34 +1,30 @@
 import net from 'net';
+import { Graph } from 'graphlib';
 import terminalKit from 'terminal-kit';
 
 export default class Net {
   onPacket;
-  portList;
+  portList = [];
   term;
   server;
-  connectedClients;
+  connectedClients = [];
+
+  _nodeGraph;
+  _nodes = [];
 
   constructor(onPacket){
-    this.connectedClients = [];
-    this.portList = [];
-    this.onPacket = onPacket;
-    this.term = terminalKit.terminal;
-    this.server = net.createServer((socket) => {
-      //'connection' listener
-      console.log('client connected');
-
-      socket.on('end', () => {
-      console.log('client disconnected');
-      });
-
-      socket.on('data', (data) => {
-        console.log('Server data: ', JSON.parse(data));
-        this.onPacket(JSON.parse(data));
-
-      });
-      socket.pipe(socket);
+    // Create client graph for gossip
+    this._nodeGraph = new Graph({ directed: false });
+    this._nodeGraph.setNode('localhost'); // TODO: Add host + port
+    this._nodeGraph.setDefaultNodeLabel(id => {
+      id = id.split(':');
+      return { host: id[0], port: id[1]}
     });
 
+    this.onPacket = onPacket;
+    this.term = terminalKit.terminal;
+
+    //this._createServer();
   };
 
   addClient(client) {
@@ -39,6 +35,137 @@ export default class Net {
     this.portList.push(port);
   };
 
+
+
+
+  /**
+   * NEW
+   */
+
+
+  // Connects to a node
+  connectNode(host : String, port : Number) : void {
+    this.addNode(host, port);
+    this._nodeGraph.setEdge('localhost', this._createNodeKey(host, port));
+
+    this.addPort(port); // TODO: Refactor out
+    this.startConnections(); // TODO: Refactor out
+  }
+
+  // Adds node to graph
+  addNode(host : String, port : Number) : void {
+    this._nodeGraph.setNode(this._createNodeKey(host, port));
+  }
+
+  addConnection(host : String, port : Number) : void {
+    this._nodeGraph.setEdge('localhost', this._createNodeKey(host, port));
+  }
+
+  // Create a key for graph nodes
+  _createNodeKey(host : String, port : Number) : Object { return host + ':' + port; }
+
+  /**
+   * Creates a new server and listens to port
+   * @param port
+   * @private
+   */
+  _createServer(port : Number) {
+    this.server = net.createServer()
+      .on('connection', this._serverConnection.bind(this))
+      .on('error', this._serverError.bind(this));
+
+    this.server.listen(port);
+  }
+
+  /**
+   * Handler for new server connections
+   * @param socket
+   * @private
+   */
+  _serverConnection(socket : net.Socket) : void {
+    //console.log(this);
+    this.addNode(socket.address().address, socket.address().port);
+    this.addConnection(socket.address().address, socket.address().port);
+    socket.on('data', this._socketData.bind(this, socket));
+  }
+
+  /**
+   * Handles server errors
+   * @param error
+   * @private
+   */
+  _serverError(error : Error) : void {
+    console.log('Something went wrong with the server.');
+    console.log(error);
+    process.exit(1);
+  }
+
+  _socketClose() {
+
+  }
+
+  /**
+   * Handles new data on sockets
+   * @param data
+   * @private
+   */
+  _socketData(socket, data) {
+    const d = JSON.parse(data);
+
+    if(d.version == 1) {
+      switch(d.type) {
+        case 'message':
+          this.onPacket(d.data);
+          break;
+
+        case 'ping':
+          socket.write(this._encodePacket('pong', {}));
+          break;
+
+        case 'pong':
+          break;
+
+        case 'sync':
+          this._sync(socket, data);
+          break;
+
+        default:
+          console.error('[NET] Received unknown message type ' + d.type);
+      }
+    }
+    /*console.log('Server data: ', JSON.parse(data));
+    this.onPacket(JSON.parse(data));*/
+  }
+
+  _sync(socket, data) {
+    // TODO: Sync
+    console.log('TODO: Sync!')
+  }
+
+
+  /**
+   * Sends a message
+   * @param message Object with keys message and user
+   */
+  sendMessage(message : String) {
+    let arrayLength = this.connectedClients.length;
+    for (let i = 0; i< arrayLength; i++) {
+      let client = this.connectedClients[i];
+      client.write(this._encodePacket('ping', message));
+    }
+  }
+
+  _encodePacket(type, data) {
+    return JSON.stringify({
+      version: 1,
+      type: type,
+      data: data
+    });
+  }
+
+  /**
+   * OLD
+   */
   startConnections() {
     let arrayLength = this.portList.length;
     for (let i = 0; i < arrayLength; i++) {
@@ -47,13 +174,10 @@ export default class Net {
         this.term.grey('Connected');
       });
 
-      client.on('data', (data) => {
-        console.log('Client data: ', JSON.parse(data));
-        this.onPacket(JSON.parse(data));
-      });
+      client.on('data', this._socketData.bind(this, client));
 
 
-      client.on('close', function() {
+      client.on('close', () => {
         this.term.grey('Connection closed');
       });
       this.connectedClients.push(client);
@@ -63,10 +187,8 @@ export default class Net {
   sendData(data) {
     let arrayLength = this.connectedClients.length;
     for (let i = 0; i< arrayLength; i++) {
-      console.log('before write');
-      var client = this.connectedClients[i];
-      client.write(JSON.stringify(data));
-      console.log('After write');
+      let client = this.connectedClients[i];
+      client.write(this._encodePacket('message', data));
     }
   }
 
