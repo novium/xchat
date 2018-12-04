@@ -1,8 +1,9 @@
 import DHT from 'bittorrent-dht';
- export default class{
+
+ export default class dht_class{
     _dht;
 
-     constructor() { //Easier to just use let ourDHT = new DHT() but oh well.
+     constructor() {
      this._dht = new DHT();
 
      //hardcoded for now
@@ -24,6 +25,7 @@ import DHT from 'bittorrent-dht';
       throw(err);
     });
 
+
     this._dht.on('node', function(newNode){
         this._dht.addNode(newNode);
     });
@@ -32,12 +34,15 @@ import DHT from 'bittorrent-dht';
 
     });
 }
+
+/*
     //To be used instead of the constructors listen.
     startListening(listenPort){
       this._dht.listen(listenPort, function(){
         console.log("DHT listening on: "+listenPort);
       });
     }
+*/
 
     infoGet(hash, callback){
       this._dht.get(hash, NULL, callback);
@@ -55,5 +60,10 @@ import DHT from 'bittorrent-dht';
     for(var i = 0, h = 0; i < s.length; i++)
         h = Math.imul(31, h) + s.charCodeAt(i) | 0;
     return h;
+    }
 }
-}
+
+let dht = new dht_class();
+var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
+
+console.log("Hash is: "+s);
