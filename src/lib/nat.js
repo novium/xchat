@@ -5,9 +5,10 @@ require("babel-polyfill");
 
 // Perform rudimentary NAT traversal?
 export default class {
-    static map() {
+    static map(port) {
         return new Promise(async (resolve, reject) => {
             let router;
+            port = port || 1111;
 
             try {
                 router = await this._findGateway();
@@ -17,12 +18,13 @@ export default class {
 
             const client = natpmp.connect(router);
 
-            client.portMapping({ private: 9090, public: 9090, ttl: 10 }, function (err, info) {
+            client.portMapping({ private: port, public: port, ttl: 60 }, function (err, info) {
                 if (err === null) {
-                    resolve({
-                        external: info.external,
-                        internal: info.internal
-                    });
+                  client.close();
+                  resolve({
+                    external: info.external,
+                    internal: info.internal
+                  });
                 } else {
                     reject(err);
                 }

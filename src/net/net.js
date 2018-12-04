@@ -1,5 +1,6 @@
 import net from 'net';
-import { Graph } from 'graphlib';
+import nat from '../lib/nat';
+import graphlib from 'graphlib';
 import terminalKit from 'terminal-kit';
 
 export default class Net {
@@ -14,7 +15,7 @@ export default class Net {
 
   constructor(onPacket){
     // Create client graph for gossip
-    this._nodeGraph = new Graph({ directed: false });
+    this._nodeGraph = new graphlib.Graph({ directed: false });
     this._nodeGraph.setNode('localhost'); // TODO: Add host + port
     this._nodeGraph.setDefaultNodeLabel(id => {
       id = id.split(':');
@@ -54,7 +55,10 @@ export default class Net {
 
   // Adds node to graph
   addNode(host : String, port : Number) : void {
-    this._nodeGraph.setNode(this._createNodeKey(host, port));
+    this._nodeGraph.setNode(
+      this._createNodeKey(host, port),
+      this._createNodeValue(host, port)
+    );
   }
 
   addConnection(host : String, port : Number) : void {
@@ -63,13 +67,17 @@ export default class Net {
 
   // Create a key for graph nodes
   _createNodeKey(host : String, port : Number) : Object { return host + ':' + port; }
+  _createNodeValue(host : String, port : Number) : Object { return { host: host, port: port }; }
 
   /**
    * Creates a new server and listens to port
    * @param port
    * @private
    */
-  _createServer(port : Number) {
+  async _createServer(port : Number) {
+    port = await nat.map(port);
+    port = port.internal;
+
     this.server = net.createServer()
       .on('connection', this._serverConnection.bind(this))
       .on('error', this._serverError.bind(this));
@@ -83,9 +91,8 @@ export default class Net {
    * @private
    */
   _serverConnection(socket : net.Socket) : void {
-    //console.log(this);
-    this.addNode(socket.address().address, socket.address().port);
-    this.addConnection(socket.address().address, socket.address().port);
+    this.addNode(socket.remoteAddress, socket.remotePort);
+    this.addConnection(socket.remoteAddress, socket.remotePort);
     socket.on('data', this._socketData.bind(this, socket));
   }
 
@@ -111,6 +118,7 @@ export default class Net {
    */
   _socketData(socket, data) {
     const d = JSON.parse(data);
+    console.log(d);
 
     if(d.version == 1) {
       switch(d.type) {
@@ -139,7 +147,8 @@ export default class Net {
 
   _sync(socket, data) {
     // TODO: Sync
-    console.log('TODO: Sync!')
+    const graph = graphlib.json.write(this._nodeGraph);
+    console.log(graph);
   }
 
 
@@ -152,6 +161,14 @@ export default class Net {
     for (let i = 0; i< arrayLength; i++) {
       let client = this.connectedClients[i];
       client.write(this._encodePacket('ping', message));
+    }
+  }
+
+  sendSync() {
+    let arrayLength = this.connectedClients.length;
+    for (let i = 0; i< arrayLength; i++) {
+      let client = this.connectedClients[i];
+      client.write(this._encodePacket('sync', {}));
     }
   }
 
