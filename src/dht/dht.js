@@ -11,15 +11,12 @@ import DHT from 'bittorrent-dht';
        console.log("DHT now listening on 1111");
      });
 
-     //if we get a new potential peer, print this and update hash(?)
+
     this._dht.on('peer', function (peer, infoHash, from) {
       console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port);
+      //Update hashtable
     });
 
-  /*  this._dht.on('listening', function(){
-      console.log("DHT is now listening");
-    });
-*/
     this._dht.on('error', function(err){
       console.log("Error experienced");
       throw(err);
@@ -27,23 +24,18 @@ import DHT from 'bittorrent-dht';
 
     this._dht.on('node', (newNode) => {
             this._dht.addNode(newNode);
-            console.log("Node added:"+newNode);
+            console.log(newNode); //<------------------------------ this prints out all the nodes that are discovered.
         });
 
-    this._dht.on('announce', (infoHash,) =>{
+    this._dht.on('announce', (infoHash) =>{
         console.log(infoHash);
     });
 
-}
+    this._dht.on('lookup', (infoHash) =>{
+      console.log("'lookup' emit received");
+    });
 
-/*
-    //To be used instead of the constructors listen.
-    startListening(listenPort){
-      this._dht.listen(listenPort, function(){
-        console.log("DHT listening on: "+listenPort);
-      });
-    }
-*/
+}
 
     infoGet(hash, callback){
       this._dht.get(hash, callback);
@@ -51,7 +43,7 @@ import DHT from 'bittorrent-dht';
 
     announce(infoHash) {
       this._dht.announce(infoHash);
-      console.log("Announcing myself!!!!!!!!!!!!!!!!!!!");
+      console.log("Announcing myself");
     }
 
     //function for generating a hash from a string.
@@ -60,11 +52,21 @@ import DHT from 'bittorrent-dht';
         h = Math.imul(31, h) + s.charCodeAt(i) | 0;
     return h;
     }
+
+    lookup(infoHash){
+      this._dht.emit('lookup', infoHash);
+    }
 }
+
 
 let dht = new dht_class();
 
-//var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
+var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
 //console.log("Hash is: "+s);
 
+//complaind that it needed a string (was sending it the infoHash)...
 //dht.announce('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh');
+
+
+//wrote my own lookup to try things out. This should already be supported by bittorrent-dht.
+dht.lookup(s);
