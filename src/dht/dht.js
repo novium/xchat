@@ -24,15 +24,17 @@ import DHT from 'bittorrent-dht';
 
     this._dht.on('node', (newNode) => {
             this._dht.addNode(newNode);
-            console.log(newNode); //<------------------------------ this prints out all the nodes that are discovered.
+            //console.log(newNode);
         });
 
     this._dht.on('announce', (infoHash) =>{
-        console.log(infoHash);
+        console.log("'announce' emit received");
+        this._dht.announce(infoHash);
     });
 
     this._dht.on('lookup', (infoHash) =>{
       console.log("'lookup' emit received");
+      this._dht.lookup(infoHash);
     });
 
 }
@@ -42,11 +44,10 @@ import DHT from 'bittorrent-dht';
     }
 
     announce(infoHash) {
-      this._dht.announce(infoHash);
-      console.log("Announcing myself");
+      this._dht.emit('announce', infoHash);
     }
 
-    //function for generating a hash from a string.
+    //Does not seem to be working correctly....
     createHashCode(s) {
     for(var i = 0, h = 0; i < s.length; i++)
         h = Math.imul(31, h) + s.charCodeAt(i) | 0;
@@ -61,12 +62,8 @@ import DHT from 'bittorrent-dht';
 
 let dht = new dht_class();
 
-var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
-//console.log("Hash is: "+s);
-
+var tmp = "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh";
 //complaind that it needed a string (was sending it the infoHash)...
-//dht.announce('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh');
+dht.announce(tmp);
 
-
-//wrote my own lookup to try things out. This should already be supported by bittorrent-dht.
-dht.lookup(s);
+dht.lookup(tmp);
