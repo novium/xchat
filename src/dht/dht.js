@@ -25,14 +25,15 @@ import DHT from 'bittorrent-dht';
       throw(err);
     });
 
+    this._dht.on('node', (newNode) => {
+            this._dht.addNode(newNode);
+            console.log("Node added:"+newNode);
+        });
 
-    this._dht.on('node', function(newNode){
-        this._dht.addNode(newNode);
+    this._dht.on('announce', (infoHash,) =>{
+        console.log(infoHash);
     });
 
-    this._dht.on('announce', function(peer, infoHash){
-
-    });
 }
 
 /*
@@ -45,14 +46,12 @@ import DHT from 'bittorrent-dht';
 */
 
     infoGet(hash, callback){
-      this._dht.get(hash, NULL, callback);
+      this._dht.get(hash, callback);
     }
 
-    endDHT() {
-      this._dht.destroy();
-    }
-
-    announce(room) {
+    announce(infoHash) {
+      this._dht.announce(infoHash);
+      console.log("Announcing myself!!!!!!!!!!!!!!!!!!!");
     }
 
     //function for generating a hash from a string.
@@ -64,6 +63,8 @@ import DHT from 'bittorrent-dht';
 }
 
 let dht = new dht_class();
-var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
 
-console.log("Hash is: "+s);
+//var s = dht.createHashCode("asdasdasdasdasdasdasdasdasdasdasdasdasdasdasdas");
+//console.log("Hash is: "+s);
+
+//dht.announce('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh');
