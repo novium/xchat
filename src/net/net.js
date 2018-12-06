@@ -21,13 +21,6 @@ export default class Net {
     this.onPacket = onPacket;
   };
 
-
-
-
-  /**
-   * NEW
-   */
-
   /**
    * Connect to a new node
    * @param host
@@ -70,6 +63,13 @@ export default class Net {
   // Create a key for graph nodes
   _createNodeKey(host : String, port : Number) : Object { return host + ':' + port; }
   _createNodeValue(host : String, port : Number) : Object { return { host: host, port: port }; }
+  _getKeyValue(key : String) {
+    const index = key.lastIndexOf(':');
+    const host = key.substr(0, index);
+    const port = key.substr(index + 1);
+
+    return { host: host, port: Number.parseInt(port) };
+  }
 
   /**
    * Creates a new server and listens to port
@@ -93,10 +93,13 @@ export default class Net {
    * @private
    */
   _serverConnection(socket : net.Socket) : void {
-    this.connectNode(socket.remoteAddress, socket.remotePort, socket);
+    this._sendPacketSocket('port', {}, socket);
+
+    console.log("Someone connected");
+
     socket.on('data', this._socketData.bind(this, socket));
     socket.on('error', this._socketError.bind(this, socket));
-    socket.on('close', this._socketClose.bind(this, socket.remoteAddress, socket.remotePort));
+    // socket.on('close', this._socketClose.bind(this, socket.remoteAddress));
   }
 
   /**
@@ -133,7 +136,8 @@ export default class Net {
    */
   _socketData(socket, data) {
     const d = JSON.parse(data);
-    console.log(d);
+    data = d.data;
+    // console.log(d);
 
     if(d.version == 1) {
       switch(d.type) {
@@ -142,10 +146,11 @@ export default class Net {
           break;
 
         case 'ping':
-          socket.write(this._encodePacket('pong', {}));
+          this._sendPacketSocket('pong', {}, socket, []);
           break;
 
         case 'pong':
+
           break;
 
         case 'sync':
@@ -153,21 +158,72 @@ export default class Net {
           break;
 
         case 'sync_res':
+          this._syncResponse(socket, data);
+          break;
 
+        case 'port':
+          this._sendPacketSocket('port_res', this.server.address().port, socket, []);
+          break;
+
+        case 'port_res':
+          this.connectNode(socket.remoteAddress, data, socket);
+          socket.on('close', this._socketClose.bind(this, socket.remoteAddress, data))
           break;
 
         default:
           console.error('[NET] Received unknown message type ' + d.type);
       }
     }
-    /*console.log('Server data: ', JSON.parse(data));
-    this.onPacket(JSON.parse(data));*/
   }
 
   _sync(socket, data) {
     // TODO: Sync
-    const graph = graphlib.json.write(this._nodeGraph);
-    this._sendPacketSocket('sync', graph, socket);
+    const res = {
+      graph: graphlib.json.write(this._nodeGraph),
+      address: socket.remoteAddress,
+      port: socket.remotePort
+    };
+
+    this._sendPacketSocket('sync_res', res, socket, []);
+  }
+
+  /**
+   * Handles new synchronization data
+   * @param socket Origin socket
+   * @param data Graph and our external IP + Port
+   * @private
+   */
+  _syncResponse(socket : net.Socket, data : Object) : void {
+    const res = graphlib.json.read(data.graph);
+    const addr = this._createNodeKey(data.address, this.server.address().port);
+
+    // Find new nodes
+    let nodes = _.without(res.nodes(), addr, 'localhost');
+    const localNodes = _.without(
+      this._nodeGraph.nodes(),
+      'localhost',
+      this._createNodeKey(socket.remoteAddress, socket.remotePort)
+    );
+    nodes = _.difference(nodes, localNodes); // Potential new peers!
+
+    // Add nodes to our graph
+    for(let node of nodes) {
+      if(!this._nodeGraph.hasNode(node)) {
+        const index = node.lastIndexOf(':');
+        const host = node.substr(0, index);
+        const port = node.substr(index + 1);
+
+        this._nodeGraph.setNode(node, this._createNodeValue(host, this.server.address().port));
+      }
+    }
+
+    const sinks = _.intersection(this._nodeGraph.sources(), this._nodeGraph.sinks());
+
+    for(let node of sinks) {
+      node = this._getKeyValue(node);
+
+      this.connect(node.host, node.port);
+    }
   }
 
 
@@ -180,14 +236,6 @@ export default class Net {
     for (let i = 0; i< arrayLength; i++) {
       let client = this.connectedClients[i];
       client.write(this._encodePacket('ping', message));
-    }
-  }
-
-  sendSync() {
-    let arrayLength = this.connectedClients.length;
-    for (let i = 0; i< arrayLength; i++) {
-      let client = this.connectedClients[i];
-      client.write(this._encodePacket('sync', {}));
     }
   }
 
@@ -211,7 +259,7 @@ export default class Net {
   }
 
   _sendPacketSocket(type, data, socket) {
-    const packet = this._encodePacket(type, data, pass);
+    const packet = this._encodePacket(type, data, []);
     socket.write(packet);
   }
 
