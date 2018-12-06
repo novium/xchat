@@ -6,37 +6,19 @@ import _ from 'lodash';
 
 export default class Net {
   onPacket;
-  portList = [];
   term;
   server;
-  connectedClients = [];
 
   _nodeGraph;
   _sockets = {};
-  _nodes = [];
   // _maxClients = 3;
 
   constructor(onPacket){
     // Create client graph for gossip
     this._nodeGraph = new graphlib.Graph({ directed: false });
     this._nodeGraph.setNode('localhost'); // TODO: Add host + port
-    this._nodeGraph.setDefaultNodeLabel(id => {
-      id = id.split(':');
-      return { host: id[0], port: id[1]}
-    });
 
     this.onPacket = onPacket;
-    this.term = terminalKit.terminal;
-
-    //this._createServer();
-  };
-
-  addClient(client) {
-    this.connectedClients.push(client);
-  };
-
-  addPort(port) {
-    this.portList.push(port);
   };
 
 
@@ -56,21 +38,21 @@ export default class Net {
     const socket = new net.Socket();
     socket.on('data', this._socketData.bind(this, socket));
     socket.on('error', this._socketError.bind(this, socket));
+    socket.on('close', this._socketClose.bind(this, host, port));
 
     try {
       await socket.connect(port, host);
     } catch(e) { console.log('Something went wrong connecting to ' + host + ':' + port); }
 
-    this._sockets[this._createNodeKey(host, port)] = socket;
-
-    this.connectNode(host, port);
+    this.connectNode(host, port, socket);
   }
 
 
   // Connects to a node
-  connectNode(host : String, port : Number) : void {
+  connectNode(host : String, port : Number, socket) : void {
     this.addNode(host, port);
     this._nodeGraph.setEdge('localhost', this._createNodeKey(host, port));
+    this._sockets[this._createNodeKey(host, port)] = socket;
   }
 
   // Adds node to graph
@@ -81,11 +63,9 @@ export default class Net {
     );
   }
 
-  /* addConnection(host : String, port : Number, socket : Object) : void {
-    const key = this._createNodeKey(host, port);
-    this._nodeGraph.setEdge('localhost', key);
-    this._sockets[key] = socket;
-  } */
+  removeNode(host : String, port : Number) : void {
+    this._nodeGraph.removeNode(this._createNodeKey(host, port));
+  }
 
   // Create a key for graph nodes
   _createNodeKey(host : String, port : Number) : Object { return host + ':' + port; }
@@ -104,7 +84,7 @@ export default class Net {
       .on('connection', this._serverConnection.bind(this))
       .on('error', this._serverError.bind(this));
 
-    this.server.listen(port);
+    this.server.listen(port, '0.0.0.0');
   }
 
   /**
@@ -113,9 +93,10 @@ export default class Net {
    * @private
    */
   _serverConnection(socket : net.Socket) : void {
-    this.addNode(socket.remoteAddress, socket.remotePort);
-    this.addConnection(socket.remoteAddress, socket.remotePort, socket);
+    this.connectNode(socket.remoteAddress, socket.remotePort, socket);
     socket.on('data', this._socketData.bind(this, socket));
+    socket.on('error', this._socketError.bind(this, socket));
+    socket.on('close', this._socketClose.bind(this, socket.remoteAddress, socket.remotePort));
   }
 
   /**
@@ -131,6 +112,18 @@ export default class Net {
 
   _socketError(e) {
     console.log('Socket returned an error ' + e);
+  }
+
+  /**
+   * Callback when socket is closed
+   * @param host
+   * @param port
+   * @param error Is true if an error occurred
+   * @private
+   */
+  _socketClose(host, port, error) {
+    this.removeNode(host, port);
+    delete this._sockets[this._createNodeKey(host, port)];
   }
 
   /**
@@ -174,8 +167,7 @@ export default class Net {
   _sync(socket, data) {
     // TODO: Sync
     const graph = graphlib.json.write(this._nodeGraph);
-    const packet = this._encodePacket('sync_res', graph);
-    this.sendData(packet);
+    this._sendPacketSocket('sync', graph, socket);
   }
 
 
@@ -218,6 +210,11 @@ export default class Net {
     }
   }
 
+  _sendPacketSocket(type, data, socket) {
+    const packet = this._encodePacket(type, data, pass);
+    socket.write(packet);
+  }
+
   /**
    * Builds a packet
    * @param type Type of packet e.g. message, sync, ping
@@ -233,47 +230,4 @@ export default class Net {
       pass: pass
     });
   }
-
-  /**
-   * OLD
-   */
-  startConnections() {
-    let arrayLength = this.portList.length;
-    for (let i = 0; i < arrayLength; i++) {
-      let client = new net.Socket();
-      client.connect(this.portList[i], () => {
-        this.term.grey('Connected');
-      });
-
-      client.on('data', this._socketData.bind(this, client));
-
-
-      client.on('close', () => {
-        this.term.grey('Connection closed');
-      });
-      this.connectedClients.push(client);
-    };
-  };
-
-  sendData(data) {
-    let arrayLength = this.connectedClients.length;
-    for (let i = 0; i< arrayLength; i++) {
-      let client = this.connectedClients[i];
-      client.write(this._encodePacket('message', data));
-    }
-  }
-
 }
-/*
-const testnet = new Net(() => {});
-testnet._createServer(process.argv[2]);
-
-if(process.argv[2] != 1111) {
-  testnet.connect('localhost', 1111);
-  setTimeout(() => {
-    testnet.sendMessage("Hello");
-    testnet.sendSync();
-    testnet._sendPacket('ping', {}, []);
-  }, 1000);
-
-}*/
