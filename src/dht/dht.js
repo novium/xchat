@@ -3,12 +3,12 @@ import DHT from 'bittorrent-dht';
  export default class dht_class{
     _dht;
 
-     constructor() {
+     constructor(listenPort) {
      this._dht = new DHT();
 
      //hardcoded for now
-     this._dht.listen(1111, function(){
-       console.log("DHT now listening on 1111");
+     this._dht.listen(listenPort, function(){
+       console.log("DHT now listening on: "+listenPort);
      });
 
 
@@ -27,7 +27,7 @@ import DHT from 'bittorrent-dht';
             //console.log(newNode);
         });
 
-    this._dht.on('announce', (infoHash) =>{
+    this._dht.on('announce', (infoHash, listenPort) =>{
         console.log("'announce' emit received");
         this._dht.announce(infoHash);
     });
@@ -36,7 +36,6 @@ import DHT from 'bittorrent-dht';
       console.log("'lookup' emit received");
       this._dht.lookup(infoHash);
     });
-
 }
 
     infoGet(hash, callback){
@@ -47,23 +46,15 @@ import DHT from 'bittorrent-dht';
       this._dht.emit('announce', infoHash);
     }
 
-    //Does not seem to be working correctly....
-    createHashCode(s) {
-    for(var i = 0, h = 0; i < s.length; i++)
-        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-    return h;
-    }
-
     lookup(infoHash){
       this._dht.emit('lookup', infoHash);
     }
 }
 
+var magnet = require('magnet-uri')
+var uri = 'magnet:?xt=urn:btih:e3811b9539cacff680e418124272177c47477157'
+var parsed = magnet(uri)
 
-let dht = new dht_class();
+let dht = new dht_class(1111);
 
-var tmp = "hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh";
-//complaind that it needed a string (was sending it the infoHash)...
-dht.announce(tmp);
-
-dht.lookup(tmp);
+dht.announce(parsed.infoHash);
