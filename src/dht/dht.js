@@ -51,10 +51,13 @@ import DHT from 'bittorrent-dht';
     }
 }
 
+/*
+//Creates a infoHash for us to use. To pass the infoHash, write parsed.infoHash.
 var magnet = require('magnet-uri')
 var uri = 'magnet:?xt=urn:btih:e3811b9539cacff680e418124272177c47477157'
 var parsed = magnet(uri)
 
+//Need to include which port the dht is supposed to listen to
 let dht = new dht_class(1111);
 
-dht.announce(parsed.infoHash);
+*/
