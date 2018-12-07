@@ -2,7 +2,7 @@ import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
 import User from './user';
-import Room from './Room';
+import Room from './room';
 import net from 'net';
 
 require("babel-polyfill");
@@ -113,13 +113,13 @@ class Main {
 
   }
 
-  static async connect(term) {
+  static async connect(term, listenPort) {
     term.clear();
     term.blue('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
     term.grey('Finding peers...\n');
-    // TODO: Find peers via DHT
-    term.grey('Found %d peers...\n', 5); // TODO: Replace 5 with peers
+    let peerList = findPeers(roomName, listenPort);
+    term.grey('Found %d peers...\n', peerList.length());
     term.grey('Initializing network...\n');
     // TODO: Connect
 
@@ -129,7 +129,21 @@ class Main {
 
     return;
   }
+
+  findPeers(roomName, listenPort) {
+  let sha1 = require('sha1');
+  let infoHash = sha1("qwertyuiopasdfghjkl"+roomName);
+  let dht = new dht_class(listenPort);
+  dht.announce(infoHash);
+
+  //Do we have to wait for the lookup to find things before returning??
+
+  return dht.lookup(infoHash);
 }
+
+}
+
+
 
 process.on('unhandledRejection', (err) => {
   console.error(err);
