@@ -14,7 +14,6 @@ class Main {
   static async main() {
     try {
       let term = this.term;
-
       term.windowTitle('xChat - not connected');
       term('Welcome to ');
       term.red('xChat \n');
@@ -65,7 +64,7 @@ class Main {
       if (listenPort != 1111) {
         const connectPort = await term.inputField({ minLength: 3 }).promise;
         net.addPort(1111);
-      }
+      };
       net.startConnections();
 
       let userActive = true;
