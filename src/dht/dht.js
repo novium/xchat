@@ -1,22 +1,36 @@
 import DHT from 'bittorrent-dht';
+import sha1 from 'sha1';
 
 export default class dht_class{
   _dht;
+  peerList;
 
   constructor(listenPort) {
     this._dht = new DHT();
+    this.peerList = [];
 
-    //hardcoded for now
     this._dht.listen(listenPort, function(){
       console.log("DHT now listening on: "+listenPort);
     });
-/*
-    this._dht.on('peer', function (peer, infoHash, from) {
+
+    this._dht.on('peer',(peer, infoHash, from) => {
       //console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port);
-      console.log(peer);
-      //console.log(infoHash);
+      var exists = false;
+      var i;
+      for (i = 0; i < this.peerList.length; i++){
+        if (this.peerList[i] = peer)
+          {
+            exists = true;
+            break;
+          }
+      }
+      if (!exists){
+        this.peerList.push(peer);
+        console.log(this.peerList);
+      }
     });
 
+    /*
     this._dht.on('error', function(err){
       console.log("Error experienced");
       throw(err);
@@ -46,10 +60,16 @@ export default class dht_class{
   lookup(infoHash){
     this._dht.lookup(infoHash);
   }
+
+  findPeers(roomName) {
+  let infoHash = sha1(roomName+roomName+roomName);
+  this.announce(infoHash);
+  this.lookup(infoHash);
+}
+
 }
 
 /*
-let sha1 = require('sha1');
 let infoHash = sha1("roomNameTemp");
 //let newBuffy = Buffer.from(infoHash);
 let dht = new dht_class(1112);

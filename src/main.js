@@ -4,6 +4,7 @@ import Net from "./net/net";
 import User from './user';
 import Room from './room';
 import net from 'net';
+import DHT from './dht/dht';
 
 require("babel-polyfill");
 
@@ -102,7 +103,7 @@ class Main {
 
     switch(choice.selectedText) {
       case 'Connect':
-        await Main.connect(term);
+        await Main.connect(term, 1111);
         return;
         break;
 
@@ -115,13 +116,17 @@ class Main {
 
   static async connect(term, listenPort) {
     term.clear();
-    term.blue('Room (min. 5): ');
+    term.green('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
     term.grey('Finding peers...\n');
-    let peerList = findPeers(roomName, listenPort);
-    term.grey('Found %d peers...\n', peerList.length());
-    term.grey('Initializing network...\n');
+
+    let dht = new DHT(listenPort);
+    dht.findPeers(roomName);
+    //term.grey('Found %d peers...\n', dht.peerList.length);
+    //term.grey('Initializing network...\n');
+
     // TODO: Connect
+
 
     // TODO: Room should access net
     const room = new Room(term);
@@ -129,18 +134,6 @@ class Main {
 
     return;
   }
-
-  findPeers(roomName, listenPort) {
-  let sha1 = require('sha1');
-  let infoHash = sha1("qwertyuiopasdfghjkl"+roomName);
-  let dht = new dht_class(listenPort);
-  dht.announce(infoHash);
-
-  //Do we have to wait for the lookup to find things before returning??
-
-  return dht.lookup(infoHash);
-}
-
 }
 
 
