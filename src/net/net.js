@@ -29,6 +29,7 @@ export default class Net {
    */
   async connect(host : String, port : Number) : void {
     const socket = new net.Socket();
+    socket.setNoDelay(true);
     socket.on('data', this._socketData.bind(this, socket));
     socket.on('error', this._socketError.bind(this, socket));
     socket.on('close', this._socketClose.bind(this, host, port));
@@ -93,9 +94,10 @@ export default class Net {
    * @private
    */
   _serverConnection(socket : net.Socket) : void {
-    this._sendPacketSocket('port', {}, socket);
+    socket.setNoDelay(true);
 
-    console.log("Someone connected");
+    // Find the node's server port
+    this._sendPacketSocket('port', {}, socket);
 
     socket.on('data', this._socketData.bind(this, socket));
     socket.on('error', this._socketError.bind(this, socket));
@@ -137,7 +139,6 @@ export default class Net {
   _socketData(socket, data) {
     const d = JSON.parse(data);
     data = d.data;
-    // console.log(d);
 
     if(d.version == 1) {
       switch(d.type) {
@@ -177,7 +178,6 @@ export default class Net {
   }
 
   _sync(socket, data) {
-    // TODO: Sync
     const res = {
       graph: graphlib.json.write(this._nodeGraph),
       address: socket.remoteAddress,
@@ -231,12 +231,11 @@ export default class Net {
    * Sends a message
    * @param message Object with keys message and user
    */
-  sendMessage(message : String) {
-    let arrayLength = this.connectedClients.length;
-    for (let i = 0; i< arrayLength; i++) {
-      let client = this.connectedClients[i];
-      client.write(this._encodePacket('ping', message));
-    }
+  sendMessage(user : String, message : String) : void {
+    this._sendPacket('message', {
+      message: message,
+      user: user
+    }, []);
   }
 
   /**
@@ -253,13 +252,17 @@ export default class Net {
 
     for(let socket of Object.keys(this._sockets)) {
       if(neighbors.includes(socket)) {
-        this._sockets[socket].write(packet);
+        this._writePacket(packet, this._sockets[socket]);
       }
     }
   }
 
   _sendPacketSocket(type, data, socket) {
     const packet = this._encodePacket(type, data, []);
+    this._writePacket(packet, socket);
+  }
+
+  _writePacket(packet, socket) {
     socket.write(packet);
   }
 
