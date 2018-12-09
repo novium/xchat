@@ -22,18 +22,20 @@ export default class {
     setTimeout(async () => {
       term.grey("Starting connection...\n");
       await this._net.createServer(this._dht.peerList[0]["port"]);
+    }, 2000);
 /*
       if(process.argv[2] == 3333) {
         await this._net.connect('127.0.0.1', 1111);
       }
 */
+    setTimeout(async () => {
       for(let i = 0; i < this._dht.peerList.length; i++){
         // TODO: Do we have the same IP if on a wifi-point? If so, make it possible to still connect.
         //if (this._dht.peerList[0]["host"])
-          await this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
+        term.gray("Trying to connect...\n>>");
+        await this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
       }
-
-    }, 1000);
+    }, 2100);
 
 
     setInterval(async () => {
