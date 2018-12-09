@@ -17,9 +17,21 @@ export default class {
         // Create tables
         await this.run(`
             CREATE TABLE IF NOT EXISTS messages (
-                hash NCHAR(64) PRIMARY KEY,
-                message TEXT,
-                username VARCHAR(64)
+                id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                hash NCHAR(64) NOT NULL,
+                message TEXT NOT NULL,
+                username VARCHAR(64) NOT NULL,
+                timestamp INT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS node_list (
+                id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                ip VARCHAR(255) NOT NULL,
+                user_port INT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS user (
+                id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+                ip VARCHAR(255) NOT NULL,
+                username VARCHAR(64) NOT NULL
             );
         `);
     }
