@@ -19,10 +19,10 @@ export default class {
   async enter() {
     const term = this._term;
 
-    setTimeout(async () => {
+    //setTimeout(async () => {
       term.grey("Starting connection...\n");
       await this._net.createServer(this._dht.peerList[0]["port"]);
-    }, 2000);
+    //}, 2000);
 /*
       if(process.argv[2] == 3333) {
         await this._net.connect('127.0.0.1', 1111);
