@@ -143,7 +143,7 @@ export default class Net {
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data);
+          this.onPacket(d.data.message, d.data.user);
           break;
 
         case 'ping':

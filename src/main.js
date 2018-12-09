@@ -18,9 +18,28 @@ class Main {
       term('Welcome to ');
       term.red('xChat \n');
 
+      term.red(`
+                                                    s    
+                         .uef^"                      :8    
+   uL   ..             :d88E                      .88    
+ .@88b  @88R       .   \`888E             u       :888ooo 
+'"Y888k/"*P   .udR88N   888E .z8k     us888u.  -*8888888 
+   Y888L     <888'888k  888E~?888L .@88 "8888"   8888    
+    8888     9888 'Y"   888E  888E 9888  9888    8888    
+    \`888N    9888       888E  888E 9888  9888    8888    
+ .u./"888&   9888       888E  888E 9888  9888   .8888Lu= 
+d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*   
+\` "Y   Y"     "8888P'  m888N= 888> "888*""888"    'Y"    
+                "P'     \`Y"   888   *Y"   *Y'            
+                             J88"                        
+                             @%                          
+                           :"                            
+
+      `);
+
       while(true) {
-        term.clear();
         await Main.menu(term);
+        term.clear();
       }
 
       process.exit(0);
@@ -28,76 +47,6 @@ class Main {
   }
 
   static async menu(term) {
-    /*let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
-
-    switch(choice.selectedText) {
-      case 'Connect':
-      term.windowTitle('xChat - enter room name');
-      term('\n room name: ');
-      const roomName = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      term.windowTitle('xChat - enter user name');
-      term('\n user name: ');
-      const userName = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      let user = new User(userName, roomName);
-
-      term.windowTitle('xChat - Chatting in: ' + user.roomName);
-      term.grey(user.name + ' is joining the room ' + user.roomName + '...\n\n');
-      // Vi använder DHT för att utifrån roomName få port och IP
-      term.bar(0.1);
-
-      let net = new Net(this.msgLog.push);
-
-      // port number is gained from UPnP
-      term('\n\n Write your listening port: ');
-      const listenPort = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      await net.server.listen(listenPort, () => {
-        term.grey('opened server on ' + listenPort);
-        term('\n\n');
-      });
-
-      if (listenPort != 1111) {
-        const connectPort = await term.inputField({ minLength: 3 }).promise;
-        net.addPort(1111);
-      };
-      net.startConnections();
-
-      let userActive = true;
-      while(userActive) {
-        let choice2 = await term.singleColumnMenu(['Write', 'Leave']).promise;
-        switch(choice2.selectedText) {
-          case 'Write':
-          term('\n Write your message: ');
-          const newMessage = await term.inputField({ minLength: 1 }).promise;
-          term('\n\n');
-          let timestamp = new Date();
-          let data = [timestamp, userName, newMessage];
-          user.addMsg(data);
-          net.sendData(data);
-
-          term('\n\n');
-          break;
-
-          case 'Leave':
-          term.grey(userName + ' is leaving the room ' + roomName + '...\n');
-          term.windowTitle('xChat - not connected');
-          userActive = false;
-          break;
-        }
-      }
-
-      break;
-
-      case 'Quit':
-      process.exit(0);
-      break;
-    }*/
-
     let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
 
     switch(choice.selectedText) {
