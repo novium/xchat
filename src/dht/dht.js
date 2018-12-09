@@ -5,7 +5,7 @@ export default class dht_class{
   _dht;
   peerList;
 
-  constructor(listenPort) {
+  constructor() {
     this._dht = new DHT();
     this.peerList = [];
 
