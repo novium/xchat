@@ -45,7 +45,7 @@ export default class dht_class {
   }
 
   removePeer(peer){
-    for (let i = 0; i < this._dht.peerList.length; i++) {
+    for (let i = 0; i < this.peerList.length; i++) {
       if (this.peerList[i] = peer){
         this.peerList.splice(i, 1);
       }
