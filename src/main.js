@@ -66,6 +66,7 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
     term.clear();
     term.blue('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
+    let userName = await term.inputField({ minLength: 1 }).promise; term('\n');
     term.grey('Finding peers...\n');
     // TODO: Find peers via DHT
     term.grey('Found %d peers...\n', 5); // TODO: Replace 5 with peers
@@ -73,7 +74,7 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
     // TODO: Connect
 
     // TODO: Room should access net
-    const room = new Room(term);
+    const room = new Room(term, userName);
     await room.enter();
 
     return;

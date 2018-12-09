@@ -22,7 +22,8 @@
     "test": "node_modules/.bin/ava",
     "build": "babel src/ -d _build/",
     "flow": "flow",
-    "docs": "./node_modules/.bin/documentation build src/** -f html -o docs"
+    "docs": "./node_modules/.bin/documentation build src/** -f html -o docs",
+    "kill": "ps | grep 'node' | awk '{print $1}' | xargs kill"
   },
   "dependencies": {
     "@babel/polyfill": "^7.0.0",

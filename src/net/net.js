@@ -77,7 +77,7 @@ export default class Net {
    * @param port
    * @private
    */
-  async _createServer(port : Number) {
+  async createServer(port : Number) {
     port = await nat.map(port);
     port = port.internal;
 
@@ -175,6 +175,10 @@ export default class Net {
           console.error('[NET] Received unknown message type ' + d.type);
       }
     }
+  }
+
+  sync() {
+    this._sendPacket('sync', {}, []);
   }
 
   _sync(socket, data) {
