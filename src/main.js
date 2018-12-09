@@ -2,8 +2,9 @@ import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
 import User from './user';
-import Room from './Room';
+import Room from './room';
 import net from 'net';
+import DHT from './dht/dht';
 
 require("babel-polyfill");
 
@@ -64,21 +65,26 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
 
   static async connect(term) {
     term.clear();
-    term.blue('Room (min. 5): ');
+    term.green('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
-    term.grey('Finding peers...\n');
-    // TODO: Find peers via DHT
-    term.grey('Found %d peers...\n', 5); // TODO: Replace 5 with peers
-    term.grey('Initializing network...\n');
-    // TODO: Connect
 
-    // TODO: Room should access net
-    const room = new Room(term);
+    term.green('\nEnter user name (min. 3): ');
+    const userName = await term.inputField({ minLength: 3 }).promise; term('\n\n');
+    let user = new User(userName, roomName);
+
+    //term.grey('Finding peers...\n');
+
+    //term.grey('Found %d peers...\n', dht.peerList.length);
+    //term.grey('Initializing network...\n');
+
+    const room = new Room(term, roomName);
     await room.enter();
 
     return;
   }
 }
+
+
 
 process.on('unhandledRejection', (err) => {
   console.error(err);
