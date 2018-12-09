@@ -33,6 +33,9 @@ export default class {
         if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
           this._net.connect(node.host, node.port);
         }
+        else {
+          this._dht.removePeer(node);
+        }
       }
     }, 2000);
 

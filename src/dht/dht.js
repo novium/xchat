@@ -23,7 +23,6 @@ export default class dht_class {
             break;
           }
       }
-
       if (!exists){
         this.peerList.push(peer);
         //console.log(this.peerList);
@@ -44,4 +43,13 @@ export default class dht_class {
     this.announce(infoHash, this._port);
     this.lookup(infoHash);
   }
+
+  removePeer(peer){
+    for (let i = 0; i < this._dht.peerList.length; i++) {
+      if (this.peerList[i] = peer){
+        this.peerList.splice(i, 1);
+      }
+    }
+  }
+
 }
