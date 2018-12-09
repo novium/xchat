@@ -118,7 +118,12 @@ class Main {
     term.clear();
     term.green('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
-    term.grey('Finding peers...\n');
+
+    term.green('\nEnter user name (min. 3): ');
+    const userName = await term.inputField({ minLength: 3 }).promise; term('\n\n');
+    let user = new User(userName, roomName);
+
+    //term.grey('Finding peers...\n');
 
     //term.grey('Found %d peers...\n', dht.peerList.length);
     //term.grey('Initializing network...\n');

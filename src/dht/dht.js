@@ -14,8 +14,7 @@ export default class dht_class{
     this._dht.on('peer',(peer, infoHash, from) => {
       //console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port);
       let exists = false;
-      let i;
-      for (i = 0; i < this.peerList.length; i++){
+      for (let i = 0; i < this.peerList.length; i++){
         if (this.peerList[i] = peer)
           {
             exists = true;
@@ -65,6 +64,13 @@ export default class dht_class{
   this.lookup(infoHash);
   }
 
+/*
+  getFields(field) {
+    let output = [];
+    for (let i=0; i < this.peerList.length ; ++i)
+        output.push(this.peerList[i][field]);
+    return output;
+  } */
 }
 
 /*
