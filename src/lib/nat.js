@@ -21,11 +21,13 @@ export default class {
             client.portMapping({ private: port, public: port, ttl: 3600 }, function (err, info) {
                 if (err === null) {
                   client.close();
+                  console.log(info);
                   resolve({
                     external: info.external,
                     internal: info.internal
                   });
                 } else {
+                  client.close();
                     reject(err);
                 }
             });
