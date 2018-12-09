@@ -1,18 +1,20 @@
 import DHT from 'bittorrent-dht';
 import sha1 from 'sha1';
 
-export default class dht_class{
+export default class dht_class {
   _dht;
+  _port;
   peerList;
 
-  constructor() {
+  constructor(port) {
+    console.log("AHSIFDHAEIOFHIOUASHFGHASOIGFHIOAHSGIH");
     this._dht = new DHT();
     this.peerList = [];
+    this._port = port;
 
     this._dht.listen();
 
     this._dht.on('peer',(peer, infoHash, from) => {
-      //console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port);
       let exists = false;
       for (let i = 0; i < this.peerList.length; i++){
         if (this.peerList[i] = peer)
@@ -21,34 +23,16 @@ export default class dht_class{
             break;
           }
       }
+
       if (!exists){
         this.peerList.push(peer);
-        console.log(this.peerList);
+        //console.log(this.peerList);
       }
     });
-
-    /*
-    this._dht.on('error', function(err){
-      console.log("Error experienced");
-      throw(err);
-    });
-    this._dht.on('node', (newNode) => {
-      this._dht.addNode(newNode);
-      //console.log(newNode);
-    });
-    this._dht.on('announce', (infoHash, listenPort) =>{
-      //console.log("'announce' emit received");
-      //this._dht.announce(infoHash);
-    });
-    this._dht.on('lookup', (infoHash) =>{
-      console.log("'lookup' emit received");
-      //this._dht.lookup(infoHash);
-    });
-*/
   }
 
   announce(infoHash) {
-    this._dht.announce(infoHash);
+    this._dht.announce(infoHash, this._port);
   }
 
   lookup(infoHash){
@@ -56,24 +40,8 @@ export default class dht_class{
   }
 
   findPeers(roomName) {
-  let infoHash = sha1(roomName+roomName+roomName);
-  this.announce(infoHash);
-  this.lookup(infoHash);
+    let infoHash = sha1(roomName+roomName+roomName);
+    this.announce(infoHash, this._port);
+    this.lookup(infoHash);
   }
-
-/*
-  getFields(field) {
-    let output = [];
-    for (let i=0; i < this.peerList.length ; ++i)
-        output.push(this.peerList[i][field]);
-    return output;
-  } */
 }
-
-/*
-let infoHash = sha1("roomNameTemp");
-//let newBuffy = Buffer.from(infoHash);
-let dht = new dht_class(1112);
-dht.announce(infoHash);
-dht.lookup(infoHash);
-*/
