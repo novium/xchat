@@ -1,8 +1,12 @@
+import DHT from './dht/dht';
+
 export default class {
   _term;
 
-  constructor(term) {
+  constructor(term, roomName) {
     this._term = term;
+    let dht = new DHT();
+    dht.findPeers(roomName);
   }
 
   async enter() {

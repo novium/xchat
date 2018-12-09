@@ -103,7 +103,7 @@ class Main {
 
     switch(choice.selectedText) {
       case 'Connect':
-        await Main.connect(term, 1111);
+        await Main.connect(term);
         return;
         break;
 
@@ -114,22 +114,16 @@ class Main {
 
   }
 
-  static async connect(term, listenPort) {
+  static async connect(term) {
     term.clear();
     term.green('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
     term.grey('Finding peers...\n');
 
-    let dht = new DHT(listenPort);
-    dht.findPeers(roomName);
     //term.grey('Found %d peers...\n', dht.peerList.length);
     //term.grey('Initializing network...\n');
 
-    // TODO: Connect
-
-
-    // TODO: Room should access net
-    const room = new Room(term);
+    const room = new Room(term, roomName);
     await room.enter();
 
     return;

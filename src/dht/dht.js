@@ -9,14 +9,12 @@ export default class dht_class{
     this._dht = new DHT();
     this.peerList = [];
 
-    this._dht.listen(listenPort, function(){
-      console.log("DHT now listening on: "+listenPort);
-    });
+    this._dht.listen();
 
     this._dht.on('peer',(peer, infoHash, from) => {
       //console.log('found potential peer ' + peer.host + ':' + peer.port + ' through ' + from.address + ':' + from.port);
-      var exists = false;
-      var i;
+      let exists = false;
+      let i;
       for (i = 0; i < this.peerList.length; i++){
         if (this.peerList[i] = peer)
           {
@@ -65,7 +63,7 @@ export default class dht_class{
   let infoHash = sha1(roomName+roomName+roomName);
   this.announce(infoHash);
   this.lookup(infoHash);
-}
+  }
 
 }
 
