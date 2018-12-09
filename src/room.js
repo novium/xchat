@@ -1,41 +1,51 @@
 import 'net';
 import Net from "./net/net";
 import DHT from "./dht/dht.js";
+import GetIP from './lib/getip';
 
 export default class {
   _term;
   _net;
   _username;
   _dht;
+  _port = 5555;
+  _ip;
+  _roomName;
 
   constructor(term, username, roomName) {
     this._term = term;
     this._net = new Net(this.messageCallback.bind(this));
     this._username = username;
-    this._dht = new DHT();
-    this._dht.findPeers(roomName);
+    this._roomName = roomName;
   }
 
   async enter() {
     const term = this._term;
 
-    //setTimeout(async () => {
-      term.grey("Starting connection...\n");
-      await this._net.createServer(this._dht.peerList[0]["port"]);
-    //}, 2000);
-/*
-      if(process.argv[2] == 3333) {
-        await this._net.connect('127.0.0.1', 1111);
+    term.grey("Starting connection...\n");
+    this._port = await this._net.createServer(this._port);
+
+    this._dht = new DHT(this._port);
+    this._dht.findPeers(this._roomName);
+
+    setInterval(() => {
+      for(let node of this._dht.peerList) {
+        if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
+          this._net.connect(node.host, node.port);
+        }
       }
-*/
-    setTimeout(async () => {
+    }, 2000);
+
+
+    /*setTimeout(async () => {
       for(let i = 0; i < this._dht.peerList.length; i++){
         // TODO: Do we have the same IP if on a wifi-point? If so, make it possible to still connect.
         //if (this._dht.peerList[0]["host"])
+        console.log(this._dht.peerList[i]);
         term.gray("Trying to connect...\n>>");
-        await this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
+        this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
       }
-    }, 2100);
+    }, 2100); */
 
 
     setInterval(async () => {
