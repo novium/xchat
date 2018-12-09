@@ -8,7 +8,7 @@ export default class {
   _net;
   _username;
   _dht;
-  _port = 6666;
+  _port = 5555;
   _ip;
   _roomName;
 
@@ -30,11 +30,8 @@ export default class {
 
     setInterval(() => {
       for(let node of this._dht.peerList) {
-        console.log("Connecting to " + node.host + ':' + node.port);
-
         if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
           this._net.connect(node.host, node.port);
-          console.log(node.host + ':' + node.port);
         }
       }
     }, 2000);
