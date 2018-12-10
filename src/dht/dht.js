@@ -39,7 +39,7 @@ export default class dht_class {
   }
 
   findPeers(roomName) {
-    let infoHash = sha1(roomName+roomName+roomName);
+    let infoHash = sha1(roomName + 's796P42rXBlUnMEozDJwiOCIATtIFspvcint5jGH34j0OXOQeYZctkebI81R');
     this.announce(infoHash, this._port);
     this.lookup(infoHash);
   }
