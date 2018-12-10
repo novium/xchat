@@ -1,7 +1,7 @@
 import sqlite3 from 'sqlite3';
 require("babel-polyfill");
 
-export default class {
+export default class Db {
     _db;
 
     constructor() {
@@ -16,12 +16,19 @@ export default class {
 
         // Create tables
         await this.run(`
-            CREATE TABLE IF NOT EXISTS messages (
-                hash NCHAR(64) PRIMARY KEY,
-                message TEXT,
-                username VARCHAR(64)
-            );
-        `);
+          CREATE TABLE IF NOT EXISTS messages (
+              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+              hash NCHAR(64) NOT NULL,
+              message TEXT NOT NULL,
+              username VARCHAR(64) NOT NULL,
+              timestamp INT NOT NULL
+          );
+          CREATE TABLE IF NOT EXISTS node_list (
+              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+              host VARCHAR(255) NOT NULL,
+              user_port INT NOT NULL
+          );`);
+  }
     }
 
     async run(...params) {
@@ -46,5 +53,25 @@ export default class {
         } catch(error) {
             throw error;
         }
+    }
+
+    saveMessage(hash, msg, username, time){
+      await this.run(`
+        INSERT INTO messages(hash, message, username, timestamp)
+        VALUES (
+            `+ hash +`,
+            `+ msg +`,
+            `+ username +`,
+            `+ time +`);`
+      );
+    }
+
+    saveNode(host_ip, port) {
+      await this.run(`
+        INSERT INTO node_list(host, user_port)
+        VALUES (
+            `+ host_ip +`,
+            `+ port +`);`
+      );
     }
 }

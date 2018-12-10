@@ -2,6 +2,7 @@ import 'net';
 import Net from "./net/net";
 import DHT from "./dht/dht.js";
 import GetIP from './lib/getip';
+import Db from "./store/db";
 
 export default class {
   _term;
@@ -10,6 +11,7 @@ export default class {
   _dht;
   _port = 5555;
   _ip;
+  _db;
   _roomName;
 
   constructor(term, username, roomName) {
@@ -17,6 +19,7 @@ export default class {
     this._net = new Net(this.messageCallback.bind(this));
     this._username = username;
     this._roomName = roomName;
+    this._db = new Db();
   }
 
   async enter() {
@@ -24,10 +27,11 @@ export default class {
 
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
+    await this._db.init();
 
     this._dht = new DHT(this._port);
     this._dht.findPeers(this._roomName);
-
+    //this_db.saveNode(this._ip, this._port);
     setInterval(() => {
       for(let node of this._dht.peerList) {
         if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
@@ -38,6 +42,8 @@ export default class {
         }
       }
     }, 2000);
+
+    await saveNL(); //----------------------------------------------- Insert more text here! ---------------------------------------------
 
 
     /*setTimeout(async () => {
@@ -112,7 +118,14 @@ export default class {
     term.moveTo(1, term.height).grey('>> ');
   }
 
-  messageCallback(message, username) {
+  messageCallback(message, username, timestamp) {
     this._writeMessage(username, message);
+    this._db.saveMessage(this._dht, message, username, timestamp);
+  }
+
+  saveNL(nodeList) {
+    for (let node in nodeList) {
+      this._db.saveNode(node.host, node.port);
+    }
   }
 }
