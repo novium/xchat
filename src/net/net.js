@@ -1,6 +1,7 @@
 import net from 'net';
 import nat from '../lib/nat';
 import graphlib from 'graphlib';
+import split from 'split';
 import terminalKit from 'terminal-kit';
 import _ from 'lodash';
 
@@ -30,7 +31,12 @@ export default class Net {
   async connect(host : String, port : Number) : void {
     const socket = new net.Socket();
     socket.setNoDelay(true);
-    socket.on('data', this._socketData.bind(this, socket));
+
+    socket.pipe(split('\0'))
+      .on('data', this._socketData.bind(this, socket))
+      .on('error', () => { socket.end() });
+
+
     socket.on('error', this._socketError.bind(this, socket));
     socket.on('close', this._socketClose.bind(this, host, port));
 
@@ -99,9 +105,12 @@ export default class Net {
     // Find the node's server port
     this._sendPacketSocket('port', {}, socket);
 
-    socket.on('data', this._socketData.bind(this, socket));
+    // Packet split!
+    socket.pipe(split('\0'))
+      .on('data', this._socketData.bind(this, socket))
+      .on('error', () => { socket.end() });
+
     socket.on('error', this._socketError.bind(this, socket));
-    // socket.on('close', this._socketClose.bind(this, socket.remoteAddress));
   }
 
   /**
@@ -126,7 +135,7 @@ export default class Net {
    * @param error Is true if an error occurred
    * @private
    */
-  _socketClose(host, port, error) {
+  _socketClose(host, port, realHost, realPort, error) {
     this.removeNode(host, port);
     delete this._sockets[this._createNodeKey(host, port)];
   }
@@ -137,8 +146,14 @@ export default class Net {
    * @private
    */
   _socketData(socket, data) {
-    const d = JSON.parse(data);
-    data = d.data;
+    let d;
+    try {
+      d = JSON.parse(data);
+      data = d.data;
+    } catch(e) {
+      // Socket closed, malformed data!
+      return;
+    }
 
     if(d.version == 1) {
       switch(d.type) {
@@ -168,13 +183,23 @@ export default class Net {
 
         case 'port_res':
           this.connectNode(socket.remoteAddress, data, socket);
-          socket.on('close', this._socketClose.bind(this, socket.remoteAddress, data))
+          socket.on(
+            'close',
+            this._socketClose.bind(
+              this,
+              socket.remoteAddress, data, socket.remoteAddress, socket.remotePort
+            )
+          );
           break;
 
         default:
           console.error('[NET] Received unknown message type ' + d.type);
       }
     }
+  }
+
+  _data(socket, packet) {
+
   }
 
   sync() {
@@ -278,11 +303,11 @@ export default class Net {
    * @private
    */
   _encodePacket(type : String, data : Object, pass : Array) : String {
-    return JSON.stringify({
+    return '' + JSON.stringify({
       version: 1,
       type: type,
       data: data,
       pass: pass
-    });
+    }) + '\0';
   }
 }
