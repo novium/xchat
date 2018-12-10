@@ -155,7 +155,17 @@ export default class Net {
   _socketData(socket, data) {
     let d;
     try {
-      d = JSON.parse(data);
+      if(isNaN(data[0])) {
+        socket.end();
+        throw new Error('Not a valid packet');
+      }
+
+      if(data.substring(1, parseInt(data[0]) + 1) != 'xchat') {
+        socket.end();
+        throw new Error('Not a xchat packet');
+      }
+
+      d = JSON.parse(data.substring(parseInt(data[0]) + 1));
       data = d.data;
     } catch(e) {
       // Socket closed, malformed data!
@@ -310,7 +320,11 @@ export default class Net {
    * @private
    */
   _encodePacket(type : String, data : Object, pass : Array) : String {
-    return '' + JSON.stringify({
+    const packet = 'xchat';
+    const length = packet.length;
+    const prefix = length + packet;
+
+    return prefix + JSON.stringify({
       version: 1,
       type: type,
       data: data,
