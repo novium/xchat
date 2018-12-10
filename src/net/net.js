@@ -142,7 +142,7 @@ export default class Net {
    * @param error Is true if an error occurred
    * @private
    */
-  _socketClose(host, port, realHost, realPort, error) {
+  _socketClose(host, port, error) {
     this.removeNode(host, port);
     delete this._sockets[this._createNodeKey(host, port)];
   }
@@ -204,7 +204,7 @@ export default class Net {
             'close',
             this._socketClose.bind(
               this,
-              socket.remoteAddress, data, socket.remoteAddress, socket.remotePort
+              socket.remoteAddress, data
             )
           );
           break;
