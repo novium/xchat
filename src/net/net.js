@@ -22,6 +22,10 @@ export default class Net {
     this.onPacket = onPacket;
   };
 
+  isConnected(host : String, port : Number) : Boolean {
+    return this._nodeGraph.hasNode(this._createNodeKey(host, port));
+  }
+
   /**
    * Connect to a new node
    * @param host
@@ -85,6 +89,7 @@ export default class Net {
    */
   async createServer(port : Number) {
     port = await nat.map(port);
+    const external = port.external;
     port = port.internal;
 
     this.server = net.createServer()
@@ -92,6 +97,8 @@ export default class Net {
       .on('error', this._serverError.bind(this));
 
     this.server.listen(port, '0.0.0.0');
+
+    return external;
   }
 
   /**
@@ -125,7 +132,7 @@ export default class Net {
   }
 
   _socketError(e) {
-    console.log('Socket returned an error ' + e);
+    console.log('Something went wrong with socket');
   }
 
   /**
