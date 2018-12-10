@@ -29,10 +29,11 @@
     "@babel/polyfill": "^7.0.0",
     "bittorrent-dht": "^9.0.0",
     "chalk": "^2.4.1",
-    "graphlib": "^2.1.5",
+    "graphlib": "^2.1.7",
     "lodash": "^4.17.11",
     "nat-pmp": "^1.0.0",
     "network": "^0.4.1",
+    "split": "^1.0.1",
     "sqlite3": "^4.0.4",
     "terminal-kit": "^1.26.4"
   },
