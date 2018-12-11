@@ -2,11 +2,11 @@ import net from 'net';
 import nat from '../lib/nat';
 import graphlib from 'graphlib';
 import split from 'split';
-import terminalKit from 'terminal-kit';
 import _ from 'lodash';
 
 export default class Net {
   onPacket;
+  onNode;
   term;
   server;
 
@@ -14,12 +14,19 @@ export default class Net {
   _sockets = {};
   // _maxClients = 3;
 
-  constructor(onPacket){
+  /**
+   * Net Constructor
+   * Handles everything network related
+   * @param onPacket optional callback run when a new message is received
+   * @param onNode optional callback run when a new node connects/is connected
+   */
+  constructor(onPacket, onNode){
     // Create client graph for gossip
     this._nodeGraph = new graphlib.Graph({ directed: false });
     this._nodeGraph.setNode('localhost'); // TODO: Add host + port
 
     this.onPacket = onPacket;
+    this.onNode = onNode;
   };
 
   isConnected(host : String, port : Number) : Boolean {
@@ -57,6 +64,10 @@ export default class Net {
     this.addNode(host, port);
     this._nodeGraph.setEdge('localhost', this._createNodeKey(host, port));
     this._sockets[this._createNodeKey(host, port)] = socket;
+
+    if(this.onNode !== undefined) {
+      this.onNode(host, port);
+    }
   }
 
   // Adds node to graph
@@ -215,10 +226,6 @@ export default class Net {
     }
   }
 
-  _data(socket, packet) {
-
-  }
-
   sync() {
     this._sendPacket('sync', {}, []);
   }
@@ -330,5 +337,18 @@ export default class Net {
       data: data,
       pass: pass
     }) + '\0';
+  }
+
+
+  /**
+   * Returns a list of all nodes in graph
+   * @returns {Array}
+   */
+  getNodes() {
+    let res = [];
+    for(let node in this._nodeGraph.nodes()) {
+      res.push(this._nodeGraph.node(node));
+    }
+    return res;
   }
 }
