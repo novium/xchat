@@ -28,7 +28,6 @@ export default class Db {
               host VARCHAR(255) NOT NULL,
               user_port INT NOT NULL
           );`);
-  }
     }
 
     async run(...params) {
@@ -55,7 +54,7 @@ export default class Db {
         }
     }
 
-    saveMessage(hash, msg, username, time){
+    async saveMessage(hash, msg, username, time){
       await this.run(`
         INSERT INTO messages(hash, message, username, timestamp)
         VALUES (
@@ -66,7 +65,7 @@ export default class Db {
       );
     }
 
-    saveNode(host_ip, port) {
+    async saveNode(host_ip, port) {
       await this.run(`
         INSERT INTO node_list(host, user_port)
         VALUES (
@@ -74,5 +73,4 @@ export default class Db {
             `+ port +`);`
       );
     }
-    
 }
