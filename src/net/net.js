@@ -175,7 +175,7 @@ export default class Net {
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data.message, d.data.user);
+          this.onPacket(d.data.message, d.data.user, d.data.timestamp);
           break;
 
         case 'ping':
@@ -277,10 +277,11 @@ export default class Net {
    * Sends a message
    * @param message Object with keys message and user
    */
-  sendMessage(user : String, message : String) : void {
+  sendMessage(user : String, message : String, timestamp : Number) : void {
     this._sendPacket('message', {
       message: message,
-      user: user
+      user: user,
+      timestamp: timestamp
     }, []);
   }
 

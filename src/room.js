@@ -24,7 +24,7 @@ export default class {
 
   async enter() {
     const term = this._term;
-
+    currentTime();
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
     await this._db.init();
@@ -88,7 +88,7 @@ export default class {
 
         default:
           // TODO: Send message
-          this._net.sendMessage(this._username, message);
+          this._net.sendMessage(this._username, message, getTimestamp());
           this._writeMessage('you', message);
           break;
       }
@@ -128,4 +128,19 @@ export default class {
       this._db.saveNode(node.host, node.port);
     }
   }
+
+  getTimestamp(){
+    return  Math.round(new Date().getTime()/1000);
+  }
+
+  currentTime(){
+      let t = getTimestamp();
+      let dt = new Date(t*1000);
+      let month = dt.getMonth();
+      let day = dt.getDate();
+      let hr = dt.getHours();
+      let m = '0'+dt.getMinutes();
+      let s = '0' +dt.getSeconds();
+      term.green(day+'/'+(month+1)+'-'+hr+':'+m.substr(-2)+':'+s.substr(-2)+'\n');
+    }
 }
