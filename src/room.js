@@ -160,7 +160,6 @@ export default class {
     }
   }
 
-
   _compareMessage(a, b) {
     if(a.timestamp > b.timestamp) {
       return 1;
@@ -177,6 +176,8 @@ export default class {
       { username: username, message: message, timestamp: timestamp },
       this._compareMessage
     );
+
+    console.log(this._merkle);
   }
 
   getTimestamp() {
