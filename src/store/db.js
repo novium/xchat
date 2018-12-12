@@ -75,6 +75,7 @@ export default class Db {
 
     async retrieveNodes() {
       try {
+        console.log('Nodelist: ' + this._db.get('SELECT * FROM node_list'));
         return this._db.run('SELECT * FROM node_list');
       } catch(err) { return; }
     }

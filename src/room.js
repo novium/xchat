@@ -229,11 +229,17 @@ export default class {
   }
 
   connectUsers() {
+    console.log('Pre-retrieve');
     let nodelist = this._db.retrieveNodes();
+    console.log('Pre-loop');
     for (let node of nodelist) {
+      console.log('Pre-if');
+      console.log(node.host + ' ' + node.user_port);
       if (!this._net.isConnected(node.host, node.user_port)) {
-              this._net.connectNode(node.host, node.user_port);
+              this._net.connect(node.host, node.user_port);
+              console.log(node.host + ' ' + node.user_port);
       }
     }
+    console.log('Post-loop');
   }
 }
