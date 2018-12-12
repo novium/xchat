@@ -4,6 +4,10 @@ import DHT from "./dht/dht.js";
 import GetIP from './lib/getip';
 import Db from "./store/db";
 
+import MerkleTree from 'merkletreejs';
+import SHA256 from 'crypto-js/sha256';
+import sorted from 'sorted-array-functions';
+
 export default class {
   _term;
   _net;
@@ -13,6 +17,9 @@ export default class {
   _ip;
   _db;
   _roomName;
+
+  _merkle;
+  _messages;
 
   constructor(term, username, roomName) {
     this._term = term;
@@ -25,11 +32,14 @@ export default class {
     this._username = username;
     this._roomName = roomName;
     this._db = new Db();
+
+    // Merkle tree!
+    this._messages = [];
+    this._merkle = new MerkleTree(this._messages.map(x => SHA256(x)), SHA256);
   }
 
   async enter() {
     const term = this._term;
-    currentTime();
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
     await this._db.init();
@@ -47,53 +57,6 @@ export default class {
         }
       }
     }, 2000);
-
-    await saveNL(); //----------------------------------------------- Insert more text here! ---------------------------------------------
-
-
-    /*setTimeout(async () => {
-      for(let i = 0; i < this._dht.peerList.length; i++){
-        // TODO: Do we have the same IP if on a wifi-point? If so, make it possible to still connect.
-        //if (this._dht.peerList[0]["host"])
-        console.log(this._dht.peerList[i]);
-        term.gray("Trying to connect...\n>>");
-        this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
-      }
-    }, 2100); */
-
-
-    setInterval(async () => {
-      await this._net.sync();
-    }, 3000);
-
-    term.grey("Starting connection...\n");
-    this._port = await this._net.createServer(this._port);
-
-    this._dht = new DHT(this._port);
-    this._dht.findPeers(this._roomName);
-
-    setInterval(() => {
-      for(let node of this._dht.peerList) {
-        if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
-          this._net.connect(node.host, node.port);
-        }
-        else {
-          this._dht.removePeer(node);
-        }
-      }
-    }, 2000);
-
-
-    /*setTimeout(async () => {
-      for(let i = 0; i < this._dht.peerList.length; i++){
-        // TODO: Do we have the same IP if on a wifi-point? If so, make it possible to still connect.
-        //if (this._dht.peerList[0]["host"])
-        console.log(this._dht.peerList[i]);
-        term.gray("Trying to connect...\n>>");
-        this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
-      }
-    }, 2100); */
-
 
     setInterval(async () => {
       await this._net.sync();
@@ -127,8 +90,10 @@ export default class {
 
         default:
           // TODO: Send message
-          this._net.sendMessage(this._username, message, getTimestamp());
+          const timestamp = this.getTimestamp();
+          this._net.sendMessage(this._username, message, timestamp);
           this._writeMessage('you', message);
+          this._insertMessage(this._username, message, timestamp);
           break;
       }
 
@@ -180,6 +145,7 @@ export default class {
   messageCallback(message, username, timestamp) {
     this._writeMessage(username, message);
     this._db.saveMessage(this._dht, message, username, timestamp);
+    this._insertMessage(username, message, timestamp);
   }
 
   saveNL(nodeList) {
@@ -189,7 +155,7 @@ export default class {
   }
 
   getTimestamp(){
-    return  Math.round(new Date().getTime()/1000);
+    return Math.round(new Date().getTime()/1000);
   }
 
   currentTime(){
@@ -202,4 +168,22 @@ export default class {
       let s = '0' +dt.getSeconds();
       term.green(day+'/'+(month+1)+'-'+hr+':'+m.substr(-2)+':'+s.substr(-2)+'\n');
     }
+
+   _compareMessage(a, b) {
+    if(a.timestamp > b.timestamp) {
+      return 1;
+    } else if(a.timestamp < b.timestamp) {
+      return -1;
+    } else {
+      return 0;
+    }
+   }
+
+   _insertMessage(username, message, timestamp) {
+    sorted.add(
+      this._messages,
+      { username: username, message: message, timestamp: timestamp },
+      this._compareMessage
+    );
+   }
 }
