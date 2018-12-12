@@ -8,8 +8,8 @@ import net from 'net';
 require("babel-polyfill");
 
 class Main {
+  static msgLog = []; // Denna ska inte ligga här ;U
   static term = terminalKit.terminal;
-  static msgLog = [];
 
   static async main() {
     try {

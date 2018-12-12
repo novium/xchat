@@ -47,7 +47,6 @@ export default class Net {
       .on('data', this._socketData.bind(this, socket))
       .on('error', () => { socket.end() });
 
-
     socket.on('error', this._socketError.bind(this, socket));
     socket.on('close', this._socketClose.bind(this, host, port));
 
@@ -268,7 +267,6 @@ export default class Net {
 
         this._nodeGraph.setNode(node, this._createNodeValue(host, this.server.address().port));
       }
-    }
 
     const sinks = _.intersection(this._nodeGraph.sources(), this._nodeGraph.sinks());
 
