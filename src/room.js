@@ -176,11 +176,11 @@ export default class {
   }
 
   getTimestamp() {
-    return Math.round((new Date().getTime()) + NTP.getTime().t)/1000);
+    return Math.round(((new Date().getTime()) + NTP.getTime().t)/1000);
   }
 
   currentTime() {
-    let time = getTimestamp();
+    let time = this.getTimestamp();
     let date = new Date(t*1000);
     let month = date.getMonth();
     let day = date.getDate();
