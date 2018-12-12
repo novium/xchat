@@ -1,11 +1,12 @@
 import net from 'net';
 import nat from '../lib/nat';
 import graphlib from 'graphlib';
-import terminalKit from 'terminal-kit';
+import split from 'split';
 import _ from 'lodash';
 
 export default class Net {
   onPacket;
+  onNode;
   term;
   server;
 
@@ -13,13 +14,24 @@ export default class Net {
   _sockets = {};
   // _maxClients = 3;
 
-  constructor(onPacket){
+  /**
+   * Net Constructor
+   * Handles everything network related
+   * @param onPacket optional callback run when a new message is received
+   * @param onNode optional callback run when a new node connects/is connected
+   */
+  constructor(onPacket, onNode){
     // Create client graph for gossip
     this._nodeGraph = new graphlib.Graph({ directed: false });
     this._nodeGraph.setNode('localhost'); // TODO: Add host + port
 
     this.onPacket = onPacket;
+    this.onNode = onNode;
   };
+
+  isConnected(host : String, port : Number) : Boolean {
+    return this._nodeGraph.hasNode(this._createNodeKey(host, port));
+  }
 
   /**
    * Connect to a new node
@@ -30,7 +42,11 @@ export default class Net {
   async connect(host : String, port : Number) : void {
     const socket = new net.Socket();
     socket.setNoDelay(true);
-    socket.on('data', this._socketData.bind(this, socket));
+
+    socket.pipe(split('\0'))
+      .on('data', this._socketData.bind(this, socket))
+      .on('error', () => { socket.end() });
+
     socket.on('error', this._socketError.bind(this, socket));
     socket.on('close', this._socketClose.bind(this, host, port));
 
@@ -47,8 +63,11 @@ export default class Net {
     this.addNode(host, port);
     this._nodeGraph.setEdge('localhost', this._createNodeKey(host, port));
     this._sockets[this._createNodeKey(host, port)] = socket;
-  }
 
+    if(this.onNode !== undefined) {
+      this.onNode(host, port);
+    }
+  }
   // Adds node to graph
   addNode(host : String, port : Number) : void {
     this._nodeGraph.setNode(
@@ -77,8 +96,9 @@ export default class Net {
    * @param port
    * @private
    */
-  async _createServer(port : Number) {
+  async createServer(port : Number) {
     port = await nat.map(port);
+    const external = port.external;
     port = port.internal;
 
     this.server = net.createServer()
@@ -86,6 +106,8 @@ export default class Net {
       .on('error', this._serverError.bind(this));
 
     this.server.listen(port, '0.0.0.0');
+
+    return external;
   }
 
   /**
@@ -99,9 +121,12 @@ export default class Net {
     // Find the node's server port
     this._sendPacketSocket('port', {}, socket);
 
-    socket.on('data', this._socketData.bind(this, socket));
+    // Packet split!
+    socket.pipe(split('\0'))
+      .on('data', this._socketData.bind(this, socket))
+      .on('error', () => { socket.end() });
+
     socket.on('error', this._socketError.bind(this, socket));
-    // socket.on('close', this._socketClose.bind(this, socket.remoteAddress));
   }
 
   /**
@@ -116,7 +141,7 @@ export default class Net {
   }
 
   _socketError(e) {
-    console.log('Socket returned an error ' + e);
+    console.log('Something went wrong with socket');
   }
 
   /**
@@ -137,13 +162,29 @@ export default class Net {
    * @private
    */
   _socketData(socket, data) {
-    const d = JSON.parse(data);
-    data = d.data;
+    let d;
+    try {
+      if(isNaN(data[0])) {
+        socket.end();
+        throw new Error('Not a valid packet');
+      }
+
+      if(data.substring(1, parseInt(data[0]) + 1) != 'xchat') {
+        socket.end();
+        throw new Error('Not a xchat packet');
+      }
+
+      d = JSON.parse(data.substring(parseInt(data[0]) + 1));
+      data = d.data;
+    } catch(e) {
+      // Socket closed, malformed data!
+      return;
+    }
 
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data.message, d.data.user);
+          this.onPacket(d.data.message, d.data.user, d.data.timestamp);
           break;
 
         case 'ping':
@@ -168,13 +209,23 @@ export default class Net {
 
         case 'port_res':
           this.connectNode(socket.remoteAddress, data, socket);
-          socket.on('close', this._socketClose.bind(this, socket.remoteAddress, data))
+          socket.on(
+            'close',
+            this._socketClose.bind(
+              this,
+              socket.remoteAddress, data
+            )
+          );
           break;
 
         default:
           console.error('[NET] Received unknown message type ' + d.type);
       }
     }
+  }
+
+  sync() {
+    this._sendPacket('sync', {}, []);
   }
 
   _sync(socket, data) {
@@ -215,7 +266,6 @@ export default class Net {
 
         this._nodeGraph.setNode(node, this._createNodeValue(host, this.server.address().port));
       }
-    }
 
     const sinks = _.intersection(this._nodeGraph.sources(), this._nodeGraph.sinks());
 
@@ -231,10 +281,11 @@ export default class Net {
    * Sends a message
    * @param message Object with keys message and user
    */
-  sendMessage(user : String, message : String) : void {
+  sendMessage(user : String, message : String, timestamp : Number) : void {
     this._sendPacket('message', {
       message: message,
-      user: user
+      user: user,
+      timestamp: timestamp
     }, []);
   }
 
@@ -274,11 +325,28 @@ export default class Net {
    * @private
    */
   _encodePacket(type : String, data : Object, pass : Array) : String {
-    return JSON.stringify({
+    const packet = 'xchat';
+    const length = packet.length;
+    const prefix = length + packet;
+
+    return prefix + JSON.stringify({
       version: 1,
       type: type,
       data: data,
       pass: pass
-    });
+    }) + '\0';
+  }
+
+
+  /**
+   * Returns a list of all nodes in graph
+   * @returns {Array}
+   */
+  getNodes() {
+    let res = [];
+    for(let node in this._nodeGraph.nodes()) {
+      res.push(this._nodeGraph.node(node));
+    }
+    return res;
   }
 }

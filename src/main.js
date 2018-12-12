@@ -9,8 +9,8 @@ import DHT from './dht/dht';
 require("babel-polyfill");
 
 class Main {
+  static msgLog = []; // Denna ska inte ligga här ;U
   static term = terminalKit.terminal;
-  static msgLog = [];
 
   static async main() {
     try {
@@ -20,21 +20,21 @@ class Main {
       term.red('xChat \n');
 
       term.red(`
-                                                    s    
-                         .uef^"                      :8    
-   uL   ..             :d88E                      .88    
- .@88b  @88R       .   \`888E             u       :888ooo 
-'"Y888k/"*P   .udR88N   888E .z8k     us888u.  -*8888888 
-   Y888L     <888'888k  888E~?888L .@88 "8888"   8888    
-    8888     9888 'Y"   888E  888E 9888  9888    8888    
-    \`888N    9888       888E  888E 9888  9888    8888    
- .u./"888&   9888       888E  888E 9888  9888   .8888Lu= 
-d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*   
-\` "Y   Y"     "8888P'  m888N= 888> "888*""888"    'Y"    
-                "P'     \`Y"   888   *Y"   *Y'            
-                             J88"                        
-                             @%                          
-                           :"                            
+                                                    s
+                         .uef^"                      :8
+   uL   ..             :d88E                      .88
+ .@88b  @88R       .   \`888E             u       :888ooo
+'"Y888k/"*P   .udR88N   888E .z8k     us888u.  -*8888888
+   Y888L     <888'888k  888E~?888L .@88 "8888"   8888
+    8888     9888 'Y"   888E  888E 9888  9888    8888
+    \`888N    9888       888E  888E 9888  9888    8888
+ .u./"888&   9888       888E  888E 9888  9888   .8888Lu=
+d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
+\` "Y   Y"     "8888P'  m888N= 888> "888*""888"    'Y"
+                "P'     \`Y"   888   *Y"   *Y'
+                             J88"
+                             @%
+                           :"
 
       `);
 
@@ -67,17 +67,11 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
     term.clear();
     term.green('Room (min. 5): ');
     let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
+    term.green('User name (min. 3): ');
+    let userName = await term.inputField({ minLength: 3 }).promise; term('\n');
 
-    term.green('\nEnter user name (min. 3): ');
-    const userName = await term.inputField({ minLength: 3 }).promise; term('\n\n');
-    let user = new User(userName, roomName);
 
-    //term.grey('Finding peers...\n');
-
-    //term.grey('Found %d peers...\n', dht.peerList.length);
-    //term.grey('Initializing network...\n');
-
-    const room = new Room(term, roomName);
+    const room = new Room(term, userName, roomName);
     await room.enter();
 
     return;
