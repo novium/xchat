@@ -130,7 +130,9 @@ export default class {
    * @param port
    */
   nodeCallback(host, port) {
-    this._db.saveNode(host, port);
+    if(host !== undefined && port !== undefined) {
+      this._db.saveNode(host, port);
+    }
   }
 
   /**
@@ -151,8 +153,10 @@ export default class {
   }
 
   saveNL() {
-    for (let node of this._net.getNodes()) {
-      this._db.saveNode(node.host, node.port);
+    for(let node of this._net.getNodes()) {
+      if(node !== undefined) {
+        this._db.saveNode(node.host, node.port);
+      }
     }
   }
 
