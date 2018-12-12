@@ -36,6 +36,7 @@
     "nat-pmp": "^1.0.0",
     "network": "^0.4.1",
     "sha1": "^1.1.1",
+    "sntp": "^3.0.2",
     "sorted-array-functions": "^1.2.0",
     "split": "^1.0.1",
     "sqlite3": "^4.0.4",

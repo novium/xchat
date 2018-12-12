@@ -10,9 +10,8 @@ export default class Db {
 
     async init() {
         this._db = await new sqlite3.Database('db.sqlite3');
-        await this._db.on('error', (error) => {
-            console.log(error);
-        });
+
+        this._db.on('error', (error) => { });
 
         // Create tables
         await this.run(`
@@ -56,7 +55,7 @@ export default class Db {
         }
     }
 
-    async saveMessage(hash, msg, username, time){
+    async saveMessage(hash, msg, username, time) {
       await this.run(`
         INSERT INTO messages(hash, message, username, timestamp)
         VALUES (
@@ -68,11 +67,13 @@ export default class Db {
     }
 
     async saveNode(host_ip, port) {
-      await this.run(`
+      try {
+        await this.run(`
         INSERT INTO node_list(host, user_port)
         VALUES (
-            `+ host_ip +`,
-            `+ port +`);`
-      );
+            ` + host_ip + `,
+            ` + port + `);`
+        );
+      } catch(e) {}
     }
 }

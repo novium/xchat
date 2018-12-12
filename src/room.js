@@ -81,7 +81,7 @@ export default class {
       switch(message) {
         case '!exit':
         case '!quit':
-          saveNL();
+          this.saveNL();
           process.exit(0);
           return;
           break;
@@ -130,7 +130,9 @@ export default class {
    * @param port
    */
   nodeCallback(host, port) {
-    this._db.saveNode(host, port);
+    if(host !== undefined && port !== undefined) {
+      this._db.saveNode(host, port);
+    }
   }
 
   /**
@@ -151,8 +153,10 @@ export default class {
   }
 
   saveNL() {
-    for (let node of this._net.getNodes()) {
-      this._db.saveNode(node.host, node.port);
+    for(let node of this._net.getNodes()) {
+      if(node !== undefined) {
+        this._db.saveNode(node.host, node.port);
+      }
     }
   }
 
@@ -176,11 +180,11 @@ export default class {
   }
 
   getTimestamp() {
-    return Math.round((new Date().getTime()) + NTP.getTime().t)/1000);
+    return Math.round(((new Date().getTime()) + NTP.getTime().t)/1000);
   }
 
   currentTime() {
-    let time = getTimestamp();
+    let time = this.getTimestamp();
     let date = new Date(t*1000);
     let month = date.getMonth();
     let day = date.getDate();
