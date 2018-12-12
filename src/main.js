@@ -4,12 +4,13 @@ import Net from "./net/net";
 import User from './user';
 import Room from './room';
 import net from 'net';
+import DHT from './dht/dht';
 
 require("babel-polyfill");
 
 class Main {
+  static msgLog = []; // Denna ska inte ligga här ;U
   static term = terminalKit.terminal;
-  static msgLog = [];
 
   static async main() {
     try {
@@ -76,6 +77,8 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
     return;
   }
 }
+
+
 
 process.on('unhandledRejection', (err) => {
   console.error(err);

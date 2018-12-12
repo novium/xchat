@@ -53,7 +53,6 @@ export default class Net {
       .on('data', this._socketData.bind(this, socket))
       .on('error', () => { socket.end() });
 
-
     socket.on('error', this._socketError.bind(this, socket));
     socket.on('close', this._socketClose.bind(this, host, port));
 
@@ -75,7 +74,6 @@ export default class Net {
       this.onNode(host, port);
     }
   }
-
   // Adds node to graph
   addNode(host : String, port : Number) : void {
     this._nodeGraph.setNode(
@@ -192,7 +190,7 @@ export default class Net {
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data.message, d.data.user);
+          this.onPacket(d.data.message, d.data.user, d.data.timestamp);
           break;
 
         case 'ping':
@@ -292,7 +290,6 @@ export default class Net {
 
         this._nodeGraph.setNode(node, this._createNodeValue(host, this.server.address().port));
       }
-    }
 
     const sinks = _.intersection(this._nodeGraph.sources(), this._nodeGraph.sinks());
 
@@ -308,10 +305,11 @@ export default class Net {
    * Sends a message
    * @param message Object with keys message and user
    */
-  sendMessage(user : String, message : String) : void {
+  sendMessage(user : String, message : String, timestamp : Number) : void {
     this._sendPacket('message', {
       message: message,
-      user: user
+      user: user,
+      timestamp: timestamp
     }, []);
   }
 

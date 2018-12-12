@@ -6,11 +6,15 @@ import net from 'net';
 require("babel-polyfill");
 
 export default class User {
+  name = {};
+  roomName = {};
+  //msgLog = {};
+  term = {};
 
   constructor(userName, roomName) {
     this.name = userName;
     this.roomName = roomName;
-    this.msgLog = [];
+    //this.msgLog = [];
     this.term  = terminalKit.terminal;
   }
 
@@ -23,14 +27,14 @@ export default class User {
     this.printLog();
   }
 
-  printLog() {
-    //this.term.clear();
+  printLog(msgLog) {
+    this.term.clear();
     this.term.inverse.grey('Chatting in room: ', this.roomName);
     this.term('\n');
 
-    let arrayLength = this.msgLog.length;
+    let arrayLength = msgLog.length; //should be thos.msgLog if using msgLog in user
     for (let i = 0; i < arrayLength; i++) {
-      let logItem = this.msgLog[i];
+      let logItem = msgLog[i];  //should be thos.msgLog if using msgLog in user
       this.term.red(logItem[0] + ' ');
       this.term.green(logItem[1] + ' ');
       this.term.grey(logItem[2]);
