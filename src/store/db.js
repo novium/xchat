@@ -19,14 +19,12 @@ export default class Db {
         // Create tables
         this._db.exec(`
           CREATE TABLE IF NOT EXISTS messages (
-              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               hash NCHAR(64) NOT NULL,
               message TEXT NOT NULL,
               username VARCHAR(64) NOT NULL,
               timestamp INT NOT NULL
           );
           CREATE TABLE IF NOT EXISTS node_list (
-              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               host VARCHAR(255) NOT NULL,
               user_port INT NOT NULL
           );
@@ -64,11 +62,7 @@ export default class Db {
       try {
         this._db.run(`
           INSERT INTO messages(hash, message, username, timestamp)
-          VALUES (
-            ` + hash + `,
-            ` + msg + `,
-            ` + username + `,
-            ` + time + `);`
+          VALUES (?, ?, ?, ?);`, [hash, msg, username, time]
         );
       } catch(e) { return; }
     }
