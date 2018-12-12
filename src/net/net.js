@@ -7,6 +7,8 @@ import _ from 'lodash';
 export default class Net {
   onPacket;
   onNode;
+  onMessageSync;
+  getMessages;
   term;
   server;
 
@@ -19,14 +21,18 @@ export default class Net {
    * Handles everything network related
    * @param onPacket optional callback run when a new message is received
    * @param onNode optional callback run when a new node connects/is connected
+   * @param onMessageSync
+   * @param getMessages
    */
-  constructor(onPacket, onNode){
+  constructor(onPacket, onNode, onMessageSync, getMessages) {
     // Create client graph for gossip
     this._nodeGraph = new graphlib.Graph({ directed: false });
     this._nodeGraph.setNode('localhost'); // TODO: Add host + port
 
     this.onPacket = onPacket;
     this.onNode = onNode;
+    this.onMessageSync = onMessageSync;
+    this.getMessages = getMessages;
   };
 
   isConnected(host : String, port : Number) : Boolean {
@@ -203,6 +209,14 @@ export default class Net {
           this._syncResponse(socket, data);
           break;
 
+        case 'syncMessages':
+          this._syncMessages(socket, data);
+          break;
+
+        case 'syncMessages_res':
+          this._syncMessagesResponse(socket, data);
+          break;
+
         case 'port':
           this._sendPacketSocket('port_res', this.server.address().port, socket, []);
           break;
@@ -222,6 +236,16 @@ export default class Net {
           console.error('[NET] Received unknown message type ' + d.type);
       }
     }
+  }
+
+  _syncMessages(socket, data) {
+    const messages = this.getMessages(data.timestamp);
+
+    this._writePacket(messages, socket);
+  }
+
+  _syncMessagesResponse(socket, data) {
+    // TODO
   }
 
   sync() {

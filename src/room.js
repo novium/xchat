@@ -16,7 +16,12 @@ export default class {
 
   constructor(term, username, roomName) {
     this._term = term;
-    this._net = new Net(this.messageCallback.bind(this));
+    this._net = new Net(
+      this.messageCallback.bind(this),
+      this.nodeCallback.bind(this),
+      this.messageSyncCallback.bind(this),
+      this.getMessages.bind(this)
+    );
     this._username = username;
     this._roomName = roomName;
     this._db = new Db();
@@ -61,6 +66,39 @@ export default class {
       await this._net.sync();
     }, 3000);
 
+    term.grey("Starting connection...\n");
+    this._port = await this._net.createServer(this._port);
+
+    this._dht = new DHT(this._port);
+    this._dht.findPeers(this._roomName);
+
+    setInterval(() => {
+      for(let node of this._dht.peerList) {
+        if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
+          this._net.connect(node.host, node.port);
+        }
+        else {
+          this._dht.removePeer(node);
+        }
+      }
+    }, 2000);
+
+
+    /*setTimeout(async () => {
+      for(let i = 0; i < this._dht.peerList.length; i++){
+        // TODO: Do we have the same IP if on a wifi-point? If so, make it possible to still connect.
+        //if (this._dht.peerList[0]["host"])
+        console.log(this._dht.peerList[i]);
+        term.gray("Trying to connect...\n>>");
+        this._net.connect(this._dht.peerList[i]["host"], this._dht.peerList[i]["port"]);
+      }
+    }, 2100); */
+
+
+    setInterval(async () => {
+      await this._net.sync();
+    }, 3000);
+
     term.windowTitle('xChat - in room');
     term.clear();
 
@@ -79,6 +117,7 @@ export default class {
       switch(message) {
         case '!exit':
         case '!quit':
+          process.exit(0);
           return;
           break;
 
@@ -116,6 +155,26 @@ export default class {
     term.eraseLine();
     term.grey(user + ': ').defaultColor(msg);
     term.moveTo(1, term.height).grey('>> ');
+  }
+
+  /**
+   * Is called when a new node is connected
+   * @param host hostname
+   * @param port
+   */
+  nodeCallback(host, port) {
+
+  }
+
+  /**
+   * Is called when another node syncs messages
+   */
+  messageSyncCallback(messages) : Object {
+    // TODO
+  }
+
+  getMessages(timestamp) {
+
   }
 
   messageCallback(message, username, timestamp) {
