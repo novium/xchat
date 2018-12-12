@@ -47,7 +47,41 @@ export default class {
 
     this._dht = new DHT(this._port);
     this._dht.findPeers(this._roomName);
-    //this_db.saveNode(this._ip, this._port);
+    //this.connectUsers();
+
+    setInterval(() => {
+      for(let node of this._dht.peerList) {
+        if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
+          this._net.connect(node.host, node.port);
+        }
+        else {
+          this._dht.removePeer(node);
+        }
+      }
+    }, 2000);
+
+    setInterval(async () => {
+      await this._net.sync();
+    }, 3000);
+
+    term.windowTitle('xChat - in room');
+    term.clear();
+
+    await this._main();
+  }
+
+  async reEnter() {
+    const term = this._term;
+    term.grey("Starting connection...\n");
+    this._port = await this._net.createServer(this._port);
+    await this._db.init();
+
+    this._dht = new DHT(this._port);
+    this._dht.findPeers(this._roomName);
+    console.log('Before');
+    this.connectUsers();
+    console.log('After');
+
     setInterval(() => {
       for(let node of this._dht.peerList) {
         if(!this._net.isConnected(node.host, node.port) && !(this._ip === node.host && this._port === node.port) ) {
@@ -186,11 +220,20 @@ export default class {
 
   currentTime() {
     let time = this.getTimestamp();
-    let date = new Date(t*1000);
+    let date = new Date(time*1000);
     let month = date.getMonth();
     let day = date.getDate();
     let hour = date.getHours();
     let minute = '0' + date.getMinutes();
     let second = '0' + date.getSeconds();
+  }
+
+  connectUsers() {
+    let nodelist = this._db.retrieveNodes();
+    for (let node of nodelist) {
+      if (!this._net.isConnected(node.host, node.user_port)) {
+              this._net.connectNode(node.host, node.user_port);
+      }
+    }
   }
 }

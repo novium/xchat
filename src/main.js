@@ -48,11 +48,16 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
   }
 
   static async menu(term) {
-    let choice = await term.singleColumnMenu(['Connect', 'Quit']).promise;
+    let choice = await term.singleColumnMenu(['Connect','Reconnect', 'Quit']).promise;
 
     switch(choice.selectedText) {
       case 'Connect':
         await Main.connect(term);
+        return;
+        break;
+
+      case 'Reconnect':
+        await Main.reconnect(term);
         return;
         break;
 
@@ -73,6 +78,20 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
 
     const room = new Room(term, userName, roomName);
     await room.enter();
+
+    return;
+  }
+
+  static async reconnect(term) {
+    term.clear();
+    term.green('Room (min. 5): ');
+    let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
+    term.green('User name (min. 3): ');
+    let userName = await term.inputField({ minLength: 3 }).promise; term('\n');
+
+
+    const room = new Room(term, userName, roomName);
+    await room.reEnter();
 
     return;
   }

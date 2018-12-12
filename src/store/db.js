@@ -64,12 +64,18 @@ export default class Db {
           INSERT INTO messages(hash, message, username, timestamp)
           VALUES (?, ?, ?, ?);`, [hash, msg, username, time]
         );
-      } catch(e) { return; }
+      } catch(err) { return; }
     }
 
     async saveNode(host_ip, port) {
       try {
         this._db.run('INSERT INTO node_list(host, user_port) VALUES (?, ?)', [host_ip, port]);
+      } catch(err) { return; }
+    }
+
+    async retrieveNodes() {
+      try {
+        return this._db.run('SELECT * FROM node_list');
       } catch(err) { return; }
     }
 }

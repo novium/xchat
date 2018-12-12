@@ -122,9 +122,9 @@ export default class Net {
    * @private
    */
   async createServer(port : Number) {
-    port = await nat.map(port);
-    const external = port.external;
-    port = port.internal;
+    //port = await nat.map(port);
+    //const external = port.external;
+    //port = port.internal;
 
     this.server = net.createServer()
       .on('connection', this._serverConnection.bind(this))
@@ -132,7 +132,7 @@ export default class Net {
 
     this.server.listen(port, '0.0.0.0');
 
-    return external;
+    return port;
   }
 
   /**
