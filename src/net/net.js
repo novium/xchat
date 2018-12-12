@@ -35,6 +35,12 @@ export default class Net {
     this.getMessages = getMessages;
   };
 
+  /**
+   * Returns true if host is connected
+   * @param host e.g. '127.0.0.1'
+   * @param port e.g. 8080
+   * @returns Boolean
+   */
   isConnected(host : String, port : Number) : Boolean {
     return this._nodeGraph.hasNode(this._createNodeKey(host, port));
   }
@@ -43,7 +49,7 @@ export default class Net {
    * Connect to a new node
    * @param host
    * @param port
-   * @returns {Promise<void>}
+   * @returns { Promise<void> }
    */
   async connect(host : String, port : Number) : void {
     const socket = new net.Socket();
@@ -76,7 +82,11 @@ export default class Net {
     }
   }
 
-  // Adds node to graph
+  /**
+   * Adds node to graph
+   * @param host
+   * @param port
+   */
   addNode(host : String, port : Number) : void {
     this._nodeGraph.setNode(
       this._createNodeKey(host, port),
@@ -84,6 +94,11 @@ export default class Net {
     );
   }
 
+  /**
+   * Removes node from graph
+   * @param host
+   * @param port
+   */
   removeNode(host : String, port : Number) : void {
     this._nodeGraph.removeNode(this._createNodeKey(host, port));
   }
@@ -102,6 +117,7 @@ export default class Net {
   /**
    * Creates a new server and listens to port
    * @param port
+   * @returns Number external port
    * @private
    */
   async createServer(port : Number) {
@@ -148,12 +164,17 @@ export default class Net {
     process.exit(1);
   }
 
+  /**
+   * Is called when error occurs on socket
+   * @param e
+   * @private
+   */
   _socketError(e) {
     console.log('Something went wrong with socket');
   }
 
   /**
-   * Callback when socket is closed
+   * Callback when socket is closed, removes node from graph and sockets
    * @param host
    * @param port
    * @param error Is true if an error occurred
@@ -166,6 +187,7 @@ export default class Net {
 
   /**
    * Handles new data on sockets
+   * @param socket
    * @param data
    * @private
    */
@@ -250,10 +272,19 @@ export default class Net {
     // TODO
   }
 
+  /**
+   * Can be called to do a sync
+   */
   sync() {
     this._sendPacket('sync', {}, []);
   }
 
+  /**
+   * Is called when a sync request is made
+   * @param socket
+   * @param data
+   * @private
+   */
   _sync(socket, data) {
     const res = {
       graph: graphlib.json.write(this._nodeGraph),
@@ -306,6 +337,7 @@ export default class Net {
 
   /**
    * Sends a message
+   * @param user Username of user
    * @param message Object with keys message and user
    */
   sendMessage(user : String, message : String) : void {
@@ -334,11 +366,24 @@ export default class Net {
     }
   }
 
+  /**
+   * Creates and sends packet to specific socket
+   * @param type Type of packet, e.g. message, sync
+   * @param data Data object
+   * @param socket Socket that is written to
+   * @private
+   */
   _sendPacketSocket(type, data, socket) {
     const packet = this._encodePacket(type, data, []);
     this._writePacket(packet, socket);
   }
 
+  /**
+   * Writes a packet to socket
+   * @param packet
+   * @param socket
+   * @private
+   */
   _writePacket(packet, socket) {
     socket.write(packet);
   }
@@ -347,7 +392,8 @@ export default class Net {
    * Builds a packet
    * @param type Type of packet e.g. message, sync, ping
    * @param data Data object, see documentation if applicable
-   * @returns {string} JSON Encoded data
+   * @param pass A list of nodes that are ignored
+   * @returns { String } JSON Encoded data
    * @private
    */
   _encodePacket(type : String, data : Object, pass : Array) : String {
