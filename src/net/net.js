@@ -68,7 +68,6 @@ export default class Net {
       this.onNode(host, port);
     }
   }
-
   // Adds node to graph
   addNode(host : String, port : Number) : void {
     this._nodeGraph.setNode(

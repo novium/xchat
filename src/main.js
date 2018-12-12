@@ -4,6 +4,7 @@ import Net from "./net/net";
 import User from './user';
 import Room from './room';
 import net from 'net';
+import DHT from './dht/dht';
 
 require("babel-polyfill");
 
@@ -76,6 +77,8 @@ d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
     return;
   }
 }
+
+
 
 process.on('unhandledRejection', (err) => {
   console.error(err);
