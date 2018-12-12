@@ -177,7 +177,7 @@ export default class {
       this._compareMessage
     );
 
-    console.log(this._merkle);
+    //console.log(this._merkle);
   }
 
   getTimestamp() {

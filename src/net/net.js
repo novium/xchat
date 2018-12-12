@@ -12,7 +12,7 @@ export default class Net {
   term;
   server;
 
-  _debug = false;
+  _debug = true;
 
   _nodeGraph;
   _sockets = {};

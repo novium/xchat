@@ -27,7 +27,6 @@ export default class Db {
               host VARCHAR(255) NOT NULL,
               user_port INT NOT NULL,
           );
-          CREATE UNIQUE INDEX IF NOT EXISTS host_port_unique_index ON node_list(host, user_port);
           `);
     }
 
@@ -56,24 +55,23 @@ export default class Db {
     }
 
     async saveMessage(hash, msg, username, time) {
-      await this.run(`
-        INSERT INTO messages(hash, message, username, timestamp)
-        VALUES (
-            `+ hash +`,
-            `+ msg +`,
-            `+ username +`,
-            `+ time +`);`
-      );
+      try {
+        this._db.run(`
+          INSERT INTO messages(hash, message, username, timestamp)
+          VALUES (
+            ` + hash + `,
+            ` + msg + `,
+            ` + username + `,
+            ` + time + `);`
+        );
+      } catch(e) { return; }
     }
 
     async saveNode(host_ip, port) {
       try {
-        this.run(`
+        this._db.run(`
         INSERT INTO node_list(host, user_port)
-        VALUES (
-          ` + host_ip + `,
-          ` + port + `);`, () => {}
-        );
+        VALUES (?, ?);`, [host_ip, port], () => {});
       } catch(err) { return; }
     }
 }
