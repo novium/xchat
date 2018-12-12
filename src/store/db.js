@@ -9,12 +9,15 @@ export default class Db {
     }
 
     async init() {
-        this._db = await new sqlite3.Database('db.sqlite3');
+      return new Promise(async (resolve, reject) => {
+        this._db = await
+        new sqlite3.Database('db.sqlite3');
 
-        this._db.on('error', (error) => { });
+        this._db.on('error', (error) => {
+        });
 
         // Create tables
-        await this.run(`
+        this._db.exec(`
           CREATE TABLE IF NOT EXISTS messages (
               id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               hash NCHAR(64) NOT NULL,
@@ -25,9 +28,12 @@ export default class Db {
           CREATE TABLE IF NOT EXISTS node_list (
               id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               host VARCHAR(255) NOT NULL,
-              user_port INT NOT NULL,
+              user_port INT NOT NULL
           );
-          `);
+          `, () => {
+            resolve();
+        });
+      });
     }
 
     async run(...params) {
@@ -69,9 +75,7 @@ export default class Db {
 
     async saveNode(host_ip, port) {
       try {
-        this._db.run(`
-        INSERT INTO node_list(host, user_port)
-        VALUES (?, ?);`, [host_ip, port], () => {});
+        this._db.run('INSERT INTO node_list(host, user_port) VALUES (?, ?)', [host_ip, port]);
       } catch(err) { return; }
     }
 }
