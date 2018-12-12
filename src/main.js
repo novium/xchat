@@ -2,6 +2,7 @@ import Logger from "./lib/logger";
 import terminalKit from 'terminal-kit';
 import Net from "./net/net";
 import User from './user';
+import Room from './room';
 import net from 'net';
 
 require("babel-polyfill");
@@ -13,13 +14,32 @@ class Main {
   static async main() {
     try {
       let term = this.term;
-
       term.windowTitle('xChat - not connected');
       term('Welcome to ');
       term.red('xChat \n');
 
+      term.red(`
+                                                    s
+                         .uef^"                      :8
+   uL   ..             :d88E                      .88
+ .@88b  @88R       .   \`888E             u       :888ooo
+'"Y888k/"*P   .udR88N   888E .z8k     us888u.  -*8888888
+   Y888L     <888'888k  888E~?888L .@88 "8888"   8888
+    8888     9888 'Y"   888E  888E 9888  9888    8888
+    \`888N    9888       888E  888E 9888  9888    8888
+ .u./"888&   9888       888E  888E 9888  9888   .8888Lu=
+d888" Y888*" ?8888u../  888E  888E 9888  9888   ^%888*
+\` "Y   Y"     "8888P'  m888N= 888> "888*""888"    'Y"
+                "P'     \`Y"   888   *Y"   *Y'
+                             J88"
+                             @%
+                           :"
+
+      `);
+
       while(true) {
         await Main.menu(term);
+        term.clear();
       }
 
       process.exit(0);
@@ -31,95 +51,36 @@ class Main {
 
     switch(choice.selectedText) {
       case 'Connect':
-      term.windowTitle('xChat - enter room name');
-      term('\n room name: ');
-      const roomName = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      term.windowTitle('xChat - enter user name');
-      term('\n user name: ');
-      const userName = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      let user = new User(userName, roomName);
-
-      term.windowTitle('xChat - Chatting in: ' + user.roomName);
-      term.grey(user.name + ' is joining the room ' + user.roomName + '...\n\n');
-      // Vi använder DHT för att utifrån roomName få port och IP
-      term.bar(0.1);
-
-      let net = new Net((msg) => {
-        this.msgLog.push(msg);
-        user.printLog(this.msgLog);
-      });
-
-      // port number is gained from UPnP
-      term('\n\n Write your listening port: ');
-      const listenPort = await term.inputField({ minLength: 3 }).promise;
-      term('\n\n');
-
-      await net.server.listen(listenPort, () => {
-        term.grey('opened server on ' + listenPort);
-        term('\n\n');
-      });
-
-      if (listenPort != 111) {
-        term('\n\n Write your connection port: ');
-        const connectPort = await term.inputField({ minLength: 3 }).promise;
-        term('\n\n');
-        net.addPort(111);
-      }
-      net.startConnections((msg) => {
-        this.msgLog.push(msg);
-        user.printLog(this.msgLog);
-      });
-
-      let userActive = true;
-      while(userActive) {
-        let choice2 = await term.singleColumnMenu(['Write', 'Leave']).promise;
-        switch(choice2.selectedText) {
-          case 'Write':
-          term('\n Write your message: ');
-          const newMessage = await term.inputField({ minLength: 1 }).promise;
-          term('\n\n');
-          let timestamp = new Date();
-          let data = [timestamp, userName, newMessage];
-
-          this.msgLog.push(JSON.parse(JSON.stringify(data)));
-          //user.addMsg(data);
-          net.sendData(data);
-          user.printLog(this.msgLog);
-
-          term('\n\n');
-          break;
-
-          case 'Leave':
-          term.grey(userName + ' is leaving the room ' + roomName + '...\n');
-          term.windowTitle('xChat - not connected');
-          userActive = false;
-          break;
-        }
-      }
-
-      break;
+        await Main.connect(term);
+        return;
+        break;
 
       case 'Quit':
-      process.exit(0);
-      break;
+      default:
+        process.exit(0);
     }
+
   }
 
-  static addMsg(msg) {
-    this.msgLog.push(msg);
-    user.printLog(this.msgLog);
-  }
+  static async connect(term) {
+    term.clear();
+    term.green('Room (min. 5): ');
+    let roomName = await term.inputField({ minLength: 5 }).promise; term('\n');
+    term.green('User name (min. 3): ');
+    let userName = await term.inputField({ minLength: 3 }).promise; term('\n');
 
+
+    const room = new Room(term, userName, roomName);
+    await room.enter();
+
+    return;
+  }
 }
 
 process.on('unhandledRejection', (err) => {
-  console.error(err)
+  console.error(err);
   process.exit(1)
-})
+});
 
 
 
