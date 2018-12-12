@@ -68,12 +68,12 @@ export default class Db {
 
     async saveNode(host_ip, port) {
       try {
-        await this.run(`
+        this.run(`
         INSERT INTO node_list(host, user_port)
         VALUES (
-            ` + host_ip + `,
-            ` + port + `);`
+          ` + host_ip + `,
+          ` + port + `);`, () => {}
         );
-      } catch(e) {}
+      } catch(err) { return; }
     }
 }

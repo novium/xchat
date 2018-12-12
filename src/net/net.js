@@ -12,6 +12,8 @@ export default class Net {
   term;
   server;
 
+  _debug = false;
+
   _nodeGraph;
   _sockets = {};
   // _maxClients = 3;
@@ -169,7 +171,8 @@ export default class Net {
    * @private
    */
   _socketError(e) {
-    console.log('Something went wrong with socket');
+    if(this._debug)
+      console.log('Something went wrong with socket');
   }
 
   /**
