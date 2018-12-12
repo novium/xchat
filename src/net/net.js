@@ -416,7 +416,7 @@ export default class Net {
    */
   getNodes() {
     let res = [];
-    for(let node in this._nodeGraph.nodes()) {
+    for(let node of this._nodeGraph.nodes()) {
       res.push(this._nodeGraph.node(node));
     }
     return res;

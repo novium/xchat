@@ -26,8 +26,10 @@ export default class Db {
           CREATE TABLE IF NOT EXISTS node_list (
               id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               host VARCHAR(255) NOT NULL,
-              user_port INT NOT NULL
-          );`);
+              user_port INT NOT NULL,
+          );
+          CREATE UNIQUE INDEX IF NOT EXISTS host_port_unique_index ON node_list(host, user_port);
+          `);
     }
 
     async run(...params) {

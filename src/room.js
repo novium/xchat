@@ -3,6 +3,7 @@ import Net from "./net/net";
 import DHT from "./dht/dht.js";
 import GetIP from './lib/getip';
 import Db from "./store/db";
+import NTP from "./lib/ntp";
 
 import MerkleTree from 'merkletreejs';
 import SHA256 from 'crypto-js/sha256';
@@ -80,6 +81,7 @@ export default class {
       switch(message) {
         case '!exit':
         case '!quit':
+          saveNL();
           process.exit(0);
           return;
           break;
@@ -128,7 +130,7 @@ export default class {
    * @param port
    */
   nodeCallback(host, port) {
-
+    this._db.saveNode(host, port);
   }
 
   /**
@@ -148,28 +150,14 @@ export default class {
     this._insertMessage(username, message, timestamp);
   }
 
-  saveNL(nodeList) {
-    for (let node in nodeList) {
+  saveNL() {
+    for (let node of this._net.getNodes()) {
       this._db.saveNode(node.host, node.port);
     }
   }
 
-  getTimestamp(){
-    return Math.round(new Date().getTime()/1000);
-  }
 
-  currentTime(){
-      let t = getTimestamp();
-      let dt = new Date(t*1000);
-      let month = dt.getMonth();
-      let day = dt.getDate();
-      let hr = dt.getHours();
-      let m = '0'+dt.getMinutes();
-      let s = '0' +dt.getSeconds();
-      term.green(day+'/'+(month+1)+'-'+hr+':'+m.substr(-2)+':'+s.substr(-2)+'\n');
-    }
-
-   _compareMessage(a, b) {
+  _compareMessage(a, b) {
     if(a.timestamp > b.timestamp) {
       return 1;
     } else if(a.timestamp < b.timestamp) {
@@ -177,13 +165,27 @@ export default class {
     } else {
       return 0;
     }
-   }
+  }
 
-   _insertMessage(username, message, timestamp) {
+  _insertMessage(username, message, timestamp) {
     sorted.add(
       this._messages,
       { username: username, message: message, timestamp: timestamp },
       this._compareMessage
     );
-   }
+  }
+
+  getTimestamp() {
+    return Math.round((new Date().getTime()) + NTP.getTime().t)/1000);
+  }
+
+  currentTime() {
+    let time = getTimestamp();
+    let date = new Date(t*1000);
+    let month = date.getMonth();
+    let day = date.getDate();
+    let hour = date.getHours();
+    let minute = '0' + date.getMinutes();
+    let second = '0' + date.getSeconds();
+  }
 }
