@@ -14,7 +14,12 @@ export default class {
 
   constructor(term, username, roomName) {
     this._term = term;
-    this._net = new Net(this.messageCallback.bind(this));
+    this._net = new Net(
+      this.messageCallback.bind(this),
+      this.nodeCallback.bind(this),
+      this.messageSyncCallback.bind(this),
+      this.getMessages.bind(this)
+    );
     this._username = username;
     this._roomName = roomName;
   }
@@ -73,6 +78,7 @@ export default class {
       switch(message) {
         case '!exit':
         case '!quit':
+          process.exit(0);
           return;
           break;
 
@@ -114,5 +120,25 @@ export default class {
 
   messageCallback(message, username) {
     this._writeMessage(username, message);
+  }
+
+  /**
+   * Is called when a new node is connected
+   * @param host hostname
+   * @param port
+   */
+  nodeCallback(host, port) {
+
+  }
+
+  /**
+   * Is called when another node syncs messages
+   */
+  messageSyncCallback(messages) : Object {
+    // TODO
+  }
+
+  getMessages(timestamp) {
+
   }
 }
