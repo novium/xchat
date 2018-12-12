@@ -81,7 +81,7 @@ export default class {
       switch(message) {
         case '!exit':
         case '!quit':
-          saveNL();
+          this.saveNL();
           process.exit(0);
           return;
           break;
