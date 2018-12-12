@@ -148,7 +148,7 @@ export default class {
 
   messageCallback(message, username, timestamp) {
     this._writeMessage(username, message);
-    this._db.saveMessage(this._dht, message, username, timestamp);
+    this._db.saveMessage(" ", message, username, timestamp);
     this._insertMessage(username, message, timestamp);
   }
 

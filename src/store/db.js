@@ -22,7 +22,7 @@ export default class Db {
               hash NCHAR(64) NOT NULL,
               message TEXT NOT NULL,
               username VARCHAR(64) NOT NULL,
-              timestamp INT NOT NULL
+              timestamp INT
           );
           CREATE TABLE IF NOT EXISTS node_list (
               host VARCHAR(255) NOT NULL,
