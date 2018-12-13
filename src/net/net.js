@@ -281,9 +281,6 @@ export default class Net {
     let messages = await this.getMessages(0);
     messages = _.difference(data.messages, messages);
 
-    console.log(messages);
-    console.log(data.messages);
-
     for(let message of messages) {
       this.onPacket(message.message, message.username, message.timestamp);
     }

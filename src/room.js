@@ -74,7 +74,7 @@ export default class {
     // Sync messages
     setInterval(async () => {
       const time = await this.getTimestamp();
-      await this._net.syncMessages(this._lastSync);
+      await this._net.syncMessages(this._lastSync - 5);
       this._lastSync = time;
     }, 2000);
 
