@@ -274,12 +274,12 @@ export default class Net {
 
   async _syncMessages(socket, data) {
     const messages = await this.getMessages(data.timestamp);
-    this._sendPacketSocket('syncMessages_res', { messages: messages }, []);
+    this._sendPacketSocket('syncMessages_res', { messages: messages }, socket, []);
   }
 
   _syncMessagesResponse(socket, data) {
     for(let message of data.messages) {
-      this.onPacket(message.message, message.user, message.timestamp);
+      this.onPacket(message.message, message.username, message.timestamp);
     }
   }
 

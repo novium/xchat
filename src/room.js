@@ -5,6 +5,8 @@ import GetIP from './lib/getip';
 import Db from "./store/db";
 import NTP from "./lib/ntp";
 
+import fs from 'fs';
+
 import SHA256 from 'crypto-js/sha256';
 import Base64 from 'crypto-js/enc-base64';
 import CryptoJS from 'crypto-js';
@@ -45,6 +47,10 @@ export default class {
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
     this._lastSync = await this.getTimestamp();
+
+    // Remove DB
+    fs.unlinkSync('./db.sqlite3');
+
     await this._db.init();
 
     this._dht = new DHT(this._port);
