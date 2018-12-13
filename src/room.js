@@ -69,7 +69,7 @@ export default class {
 
     setInterval(async () => {
       await this._net.sync();
-    }, 3000);
+    }, 200);
 
     // Sync messages
     setInterval(async () => {
@@ -106,7 +106,6 @@ export default class {
           break;
 
         default:
-          // TODO: Send message
           const timestamp = await this.getTimestamp();
           this._net.sendMessage(this._username, message, timestamp);
           this._writeMessage('you', message);

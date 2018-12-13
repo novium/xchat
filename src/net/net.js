@@ -220,7 +220,7 @@ export default class Net {
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data.message, d.data.user, d.data.timestamp);
+          //this.onPacket(d.data.message, d.data.user, d.data.timestamp);
           break;
 
         case 'ping':
@@ -278,8 +278,8 @@ export default class Net {
   }
 
   async _syncMessagesResponse(socket, data) {
-    let messages = await this.getMessages(data.timestamp);
-    messages = _.xor(messages, data.messages);
+    let messages = await this.getMessages(0);
+    messages = _.difference(data.messages, messages);
 
     for(let message of messages) {
       this.onPacket(message.message, message.username, message.timestamp);
