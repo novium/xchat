@@ -39,7 +39,7 @@ export default class {
     this._roomName = roomName;
     this._db = new Db();
 
-    this._messages = new SortedArray([], this._compareMessage);
+    this._messages = new SortedArray([], this._compareMessage.bind(this));
   }
 
   async enter() {
@@ -166,11 +166,13 @@ export default class {
   }
 
   messageCallback(message, username, timestamp) {
-    if(this._messages.search({ message: message, username: username, timestamp: timestamp }) === undefined) {
-      this._writeMessage(username, message);
-      this._db.saveMessage(" ", message, username, timestamp);
-      this._insertMessage(username, message, timestamp);
+    if(username === this._username && timestamp > (this._lastSync - 5)) {
+      return;
     }
+
+    this._writeMessage(username, message);
+    this._db.saveMessage(" ", message, username, timestamp);
+    this._insertMessage(username, message, timestamp);
   }
 
   saveNL() {
