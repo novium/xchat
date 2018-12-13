@@ -73,8 +73,9 @@ export default class {
 
     // Sync messages
     setInterval(async () => {
+      const time = await this.getTimestamp();
       await this._net.syncMessages(this._lastSync);
-      this._lastSync = await this.getTimestamp();
+      this._lastSync = time;
     }, 2000);
 
     term.windowTitle('xChat - in room');
