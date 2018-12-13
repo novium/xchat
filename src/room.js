@@ -108,7 +108,7 @@ export default class {
         default:
           const timestamp = await this.getTimestamp();
           this._net.sendMessage(this._username, message, timestamp);
-          //this._writeMessage('you', message);
+          this._writeMessage('you', message);
           this._db.saveMessage(" ", message, this._username, timestamp);
           this._insertMessage(this._username, message, timestamp);
           break;
@@ -192,7 +192,7 @@ export default class {
     } else if(a.timestamp < b.timestamp) {
       return -1;
     } else {
-      return this._strcmp(a.username + a.message, b.username + b.message);
+      return 0;
     }
   }
 
