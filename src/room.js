@@ -145,6 +145,7 @@ export default class {
    * @param port
    */
   nodeCallback(host, port) {
+    this._net.syncMessages(0);
     if(host !== undefined && port !== undefined) {
       this._db.saveNode(host, port);
     }
@@ -209,7 +210,7 @@ export default class {
 
   async getTimestamp() {
     let time = new Date().getTime();
-    time += (await NTP.getTime()).t;
+    //time += (await NTP.getTime()).t;
     return Math.round(time / 1000);
   }
 
