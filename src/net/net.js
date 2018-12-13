@@ -279,7 +279,7 @@ export default class Net {
 
   async _syncMessagesResponse(socket, data) {
     let messages = await this.getMessages(data.timestamp);
-    messages = _.difference(messages, data.messages);
+    messages = _.xor(messages, data.messages);
 
     for(let message of messages) {
       this.onPacket(message.message, message.username, message.timestamp);
