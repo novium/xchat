@@ -166,7 +166,7 @@ export default class {
   }
 
   messageCallback(message, username, timestamp) {
-    if(this._messages.search({ message: message, username: username, timestamp: timestamp }) === -1) {
+    if(this._messages.search(JSON.stringify({ message: message, username: username, timestamp: timestamp })) === -1) {
       this._writeMessage(username, message);
       this._db.saveMessage(" ", message, username, timestamp);
       this._insertMessage(username, message, timestamp);
