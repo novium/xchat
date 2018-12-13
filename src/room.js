@@ -5,9 +5,12 @@ import GetIP from './lib/getip';
 import Db from "./store/db";
 import NTP from "./lib/ntp";
 
-import MerkleTree from 'merkletreejs';
 import SHA256 from 'crypto-js/sha256';
-import sorted from 'sorted-array-functions';
+import Base64 from 'crypto-js/enc-base64';
+import CryptoJS from 'crypto-js';
+import MerkleTree from 'merkletreejs';
+import SortedArray from 'sorted-array';
+
 
 export default class {
   _term;
@@ -18,8 +21,8 @@ export default class {
   _ip;
   _db;
   _roomName;
+  _lastSync;
 
-  _merkle;
   _messages;
 
   constructor(term, username, roomName) {
@@ -34,15 +37,14 @@ export default class {
     this._roomName = roomName;
     this._db = new Db();
 
-    // Merkle tree!
-    this._messages = [];
-    this._merkle = new MerkleTree(this._messages.map(x => SHA256(x)), SHA256);
+    this._messages = new SortedArray([], this._compareMessage);
   }
 
   async enter() {
     const term = this._term;
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
+    this._lastSync = await this.getTimestamp();
     await this._db.init();
 
     this._dht = new DHT(this._port);
@@ -62,6 +64,12 @@ export default class {
     setInterval(async () => {
       await this._net.sync();
     }, 3000);
+
+    // Sync messages
+    setInterval(async () => {
+      await this._net.syncMessages(this._lastSync);
+      this._lastSync = await this.getTimestamp();
+    }, 2000);
 
     term.windowTitle('xChat - in room');
     term.clear();
@@ -92,9 +100,10 @@ export default class {
 
         default:
           // TODO: Send message
-          const timestamp = this.getTimestamp();
+          const timestamp = await this.getTimestamp();
           this._net.sendMessage(this._username, message, timestamp);
           this._writeMessage('you', message);
+          this._db.saveMessage(" ", message, this._username, timestamp);
           this._insertMessage(this._username, message, timestamp);
           break;
       }
@@ -142,8 +151,12 @@ export default class {
     // TODO
   }
 
-  getMessages(timestamp) {
-
+  async getMessages(timestamp) {
+    return new Promise(resolve => {
+      this._db.all('SELECT * FROM messages WHERE timestamp > ?', [timestamp], (err, rows) => {
+        resolve(rows);
+      });
+    });
   }
 
   messageCallback(message, username, timestamp) {
@@ -161,6 +174,9 @@ export default class {
   }
 
   _compareMessage(a, b) {
+    a = JSON.parse(a);
+    b = JSON.parse(b);
+
     if(a.timestamp > b.timestamp) {
       return 1;
     } else if(a.timestamp < b.timestamp) {
@@ -170,18 +186,19 @@ export default class {
     }
   }
 
-  _insertMessage(username, message, timestamp) {
-    sorted.add(
-      this._messages,
-      { username: username, message: message, timestamp: timestamp },
-      this._compareMessage
-    );
-
-    //console.log(this._merkle);
+  _createMessage(username, message, timestamp) {
+    return { username: username, message: message, timestamp: timestamp }
   }
 
-  getTimestamp() {
-    return Math.round(((new Date().getTime()) + NTP.getTime().t)/1000);
+  _insertMessage(username, message, timestamp) {
+    const msg = JSON.stringify(this._createMessage(username, message, timestamp));
+    this._messages.insert(msg);
+  }
+
+  async getTimestamp() {
+    let time = new Date().getTime();
+    time += (await NTP.getTime()).t;
+    return Math.round(time / 1000);
   }
 
   currentTime() {

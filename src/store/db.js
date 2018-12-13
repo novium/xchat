@@ -19,7 +19,7 @@ export default class Db {
         // Create tables
         this._db.exec(`
           CREATE TABLE IF NOT EXISTS messages (
-              hash NCHAR(64) NOT NULL,
+              hash NCHAR(64),
               message TEXT NOT NULL,
               username VARCHAR(64) NOT NULL,
               timestamp INT
@@ -60,9 +60,8 @@ export default class Db {
 
     async saveMessage(hash, msg, username, time) {
       try {
-        this._db.run(`
-          INSERT INTO messages(hash, message, username, timestamp)
-          VALUES (?, ?, ?, ?);`, [hash, msg, username, time]
+        this._db.run("INSERT INTO messages(hash, message, username, timestamp) VALUES (?, ?, ?, ?)",
+          [hash, msg, username, time]
         );
       } catch(e) { return; }
     }

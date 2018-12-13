@@ -9,6 +9,7 @@ export default class Net {
   onNode;
   onMessageSync;
   getMessages;
+  getMerkle;
   term;
   server;
 
@@ -25,6 +26,7 @@ export default class Net {
    * @param onNode optional callback run when a new node connects/is connected
    * @param onMessageSync
    * @param getMessages
+   * @param getMerkle
    */
   constructor(onPacket, onNode, onMessageSync, getMessages) {
     // Create client graph for gossip
@@ -61,7 +63,7 @@ export default class Net {
       .on('data', this._socketData.bind(this, socket))
       .on('error', () => { socket.end() });
 
-    socket.on('error', this._socketError.bind(this, socket));
+    socket.on('error', this._socketError.bind(this));
     socket.on('close', this._socketClose.bind(this, host, port));
 
     try {
@@ -171,8 +173,10 @@ export default class Net {
    * @private
    */
   _socketError(e) {
-    if(this._debug)
+    if(this._debug) {
       console.log('Something went wrong with socket');
+      console.log(e);
+    }
   }
 
   /**
@@ -264,14 +268,19 @@ export default class Net {
     }
   }
 
-  _syncMessages(socket, data) {
-    const messages = this.getMessages(data.timestamp);
+  async syncMessages(timestamp) {
+    this._sendPacket('syncMessages', { timestamp: timestamp }, []);
+  }
 
-    this._writePacket(messages, socket);
+  async _syncMessages(socket, data) {
+    const messages = await this.getMessages(data.timestamp);
+    this._sendPacketSocket('syncMessages_res', { messages: messages }, []);
   }
 
   _syncMessagesResponse(socket, data) {
-    // TODO
+    for(let message of data.messages) {
+      this.onPacket(message.message, message.user, message.timestamp);
+    }
   }
 
   /**
