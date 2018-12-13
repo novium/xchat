@@ -108,7 +108,7 @@ export default class {
         default:
           const timestamp = await this.getTimestamp();
           this._net.sendMessage(this._username, message, timestamp);
-          this._writeMessage('you', message);
+          //this._writeMessage('you', message);
           this._db.saveMessage(" ", message, this._username, timestamp);
           this._insertMessage(this._username, message, timestamp);
           break;
@@ -166,10 +166,6 @@ export default class {
   }
 
   messageCallback(message, username, timestamp) {
-    if(username === this._username && timestamp > (this._lastSync - 5)) {
-      return;
-    }
-
     this._writeMessage(username, message);
     this._db.saveMessage(" ", message, username, timestamp);
     this._insertMessage(username, message, timestamp);
