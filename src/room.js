@@ -46,7 +46,7 @@ export default class {
     const term = this._term;
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
-    this._lastSync = await this.getTimestamp();
+    this._lastSync = 0;
 
     // Remove DB
     fs.unlinkSync('./db.sqlite3');
