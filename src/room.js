@@ -166,9 +166,11 @@ export default class {
   }
 
   messageCallback(message, username, timestamp) {
-    this._writeMessage(username, message);
-    this._db.saveMessage(" ", message, username, timestamp);
-    this._insertMessage(username, message, timestamp);
+    if(this._messages.search({ message: message, username: username, timestamp: timestamp }) === -1) {
+      this._writeMessage(username, message);
+      this._db.saveMessage(" ", message, username, timestamp);
+      this._insertMessage(username, message, timestamp);
+    }
   }
 
   saveNL() {
@@ -192,7 +194,7 @@ export default class {
     } else if(a.timestamp < b.timestamp) {
       return -1;
     } else {
-      return 0;
+      return this._strcmp(a.username + a.message, b.username + b.message);
     }
   }
 
