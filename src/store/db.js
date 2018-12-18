@@ -9,26 +9,29 @@ export default class Db {
     }
 
     async init() {
-        this._db = await new sqlite3.Database('db.sqlite3');
+      return new Promise(async (resolve, reject) => {
+        this._db = await
+        new sqlite3.Database('db.sqlite3');
 
-        this._db.on('error', (error) => { });
+        this._db.on('error', (error) => {
+        });
 
         // Create tables
-        await this.run(`
+        this._db.exec(`
           CREATE TABLE IF NOT EXISTS messages (
-              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-              hash NCHAR(64) NOT NULL,
+              hash NCHAR(64),
               message TEXT NOT NULL,
               username VARCHAR(64) NOT NULL,
-              timestamp INT NOT NULL
+              timestamp INT
           );
           CREATE TABLE IF NOT EXISTS node_list (
-              id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
               host VARCHAR(255) NOT NULL,
-              user_port INT NOT NULL,
+              user_port INT NOT NULL
           );
-          CREATE UNIQUE INDEX IF NOT EXISTS host_port_unique_index ON node_list(host, user_port);
-          `);
+          `, () => {
+            resolve();
+        });
+      });
     }
 
     async run(...params) {
@@ -56,24 +59,16 @@ export default class Db {
     }
 
     async saveMessage(hash, msg, username, time) {
-      await this.run(`
-        INSERT INTO messages(hash, message, username, timestamp)
-        VALUES (
-            `+ hash +`,
-            `+ msg +`,
-            `+ username +`,
-            `+ time +`);`
-      );
+      try {
+        this._db.run("INSERT INTO messages(hash, message, username, timestamp) VALUES (?, ?, ?, ?)",
+          [hash, msg, username, time]
+        );
+      } catch(e) { return; }
     }
 
     async saveNode(host_ip, port) {
       try {
-        this.run(`
-        INSERT INTO node_list(host, user_port)
-        VALUES (
-          ` + host_ip + `,
-          ` + port + `);`, () => {}
-        );
+        this._db.run('INSERT INTO node_list(host, user_port) VALUES (?, ?)', [host_ip, port]);
       } catch(err) { return; }
     }
 }

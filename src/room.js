@@ -5,9 +5,14 @@ import GetIP from './lib/getip';
 import Db from "./store/db";
 import NTP from "./lib/ntp";
 
-import MerkleTree from 'merkletreejs';
+import fs from 'fs';
+
 import SHA256 from 'crypto-js/sha256';
-import sorted from 'sorted-array-functions';
+import Base64 from 'crypto-js/enc-base64';
+import CryptoJS from 'crypto-js';
+import MerkleTree from 'merkletreejs';
+import SortedArray from 'sorted-array';
+
 
 export default class {
   _term;
@@ -18,8 +23,8 @@ export default class {
   _ip;
   _db;
   _roomName;
+  _lastSync;
 
-  _merkle;
   _messages;
 
   constructor(term, username, roomName) {
@@ -34,15 +39,18 @@ export default class {
     this._roomName = roomName;
     this._db = new Db();
 
-    // Merkle tree!
-    this._messages = [];
-    this._merkle = new MerkleTree(this._messages.map(x => SHA256(x)), SHA256);
+    this._messages = new SortedArray([], this._compareMessage.bind(this));
   }
 
   async enter() {
     const term = this._term;
     term.grey("Starting connection...\n");
     this._port = await this._net.createServer(this._port);
+    this._lastSync = 0;
+
+    // Remove DB
+    fs.unlinkSync('./db.sqlite3');
+
     await this._db.init();
 
     this._dht = new DHT(this._port);
@@ -61,7 +69,14 @@ export default class {
 
     setInterval(async () => {
       await this._net.sync();
-    }, 3000);
+    }, 500);
+
+    // Sync messages
+    setInterval(async () => {
+      const time = await this.getTimestamp();
+      await this._net.syncMessages(this._lastSync - 5);
+      this._lastSync = time;
+    }, 2000);
 
     term.windowTitle('xChat - in room');
     term.clear();
@@ -91,10 +106,10 @@ export default class {
           break;
 
         default:
-          // TODO: Send message
-          const timestamp = this.getTimestamp();
+          const timestamp = await this.getTimestamp();
           this._net.sendMessage(this._username, message, timestamp);
           this._writeMessage('you', message);
+          this._db.saveMessage(" ", message, this._username, timestamp);
           this._insertMessage(this._username, message, timestamp);
           break;
       }
@@ -130,6 +145,7 @@ export default class {
    * @param port
    */
   nodeCallback(host, port) {
+    this._net.syncMessages(0);
     if(host !== undefined && port !== undefined) {
       this._db.saveNode(host, port);
     }
@@ -142,14 +158,20 @@ export default class {
     // TODO
   }
 
-  getMessages(timestamp) {
-
+  async getMessages(timestamp) {
+    return new Promise(resolve => {
+      this._db.all('SELECT * FROM messages WHERE timestamp > ?', [timestamp], (err, rows) => {
+        resolve(rows);
+      });
+    });
   }
 
   messageCallback(message, username, timestamp) {
-    this._writeMessage(username, message);
-    this._db.saveMessage(this._dht, message, username, timestamp);
-    this._insertMessage(username, message, timestamp);
+    if(this._messages.search(JSON.stringify({ message: message, username: username, timestamp: timestamp })) === -1) {
+      this._writeMessage(username, message);
+      this._db.saveMessage(" ", message, username, timestamp);
+      this._insertMessage(username, message, timestamp);
+    }
   }
 
   saveNL() {
@@ -160,14 +182,25 @@ export default class {
     }
   }
 
+  _strcmp(str1, str2) {
+    return ( ( str1 === str2 ) ? 0 : ( ( str1 > str2 ) ? 1 : -1 ) );
+  }
+
   _compareMessage(a, b) {
+    a = JSON.parse(a);
+    b = JSON.parse(b);
+
     if(a.timestamp > b.timestamp) {
       return 1;
     } else if(a.timestamp < b.timestamp) {
       return -1;
     } else {
-      return 0;
+      return this._strcmp(a.username + a.message, b.username + b.message);
     }
+  }
+
+  _createMessage(username, message, timestamp) {
+    return { username: username, message: message, timestamp: timestamp }
   }
 
   _insertMessage(username, message, timestamp) {
@@ -176,12 +209,12 @@ export default class {
       { username: username, message: message, timestamp: timestamp },
       this._compareMessage
     );
-
-    console.log(this._merkle);
   }
 
-  getTimestamp() {
-    return Math.round(((new Date().getTime()) + NTP.getTime().t)/1000);
+  async getTimestamp() {
+    let time = new Date().getTime();
+    //time += (await NTP.getTime()).t;
+    return Math.round(time / 1000);
   }
 
   currentTime() {

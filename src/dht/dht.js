@@ -7,7 +7,6 @@ export default class dht_class {
   peerList;
 
   constructor(port) {
-    console.log("AHSIFDHAEIOFHIOUASHFGHASOIGFHIOAHSGIH");
     this._dht = new DHT();
     this.peerList = [];
     this._port = port;

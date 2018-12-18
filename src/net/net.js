@@ -9,6 +9,7 @@ export default class Net {
   onNode;
   onMessageSync;
   getMessages;
+  getMerkle;
   term;
   server;
 
@@ -25,6 +26,7 @@ export default class Net {
    * @param onNode optional callback run when a new node connects/is connected
    * @param onMessageSync
    * @param getMessages
+   * @param getMerkle
    */
   constructor(onPacket, onNode, onMessageSync, getMessages) {
     // Create client graph for gossip
@@ -61,7 +63,7 @@ export default class Net {
       .on('data', this._socketData.bind(this, socket))
       .on('error', () => { socket.end() });
 
-    socket.on('error', this._socketError.bind(this, socket));
+    socket.on('error', this._socketError.bind(this));
     socket.on('close', this._socketClose.bind(this, host, port));
 
     try {
@@ -122,9 +124,9 @@ export default class Net {
    * @private
    */
   async createServer(port : Number) {
-    port = await nat.map(port);
-    const external = port.external;
-    port = port.internal;
+    // port = await nat.map(port);
+    // const external = port.external;
+    // port = port.internal;
 
     this.server = net.createServer()
       .on('connection', this._serverConnection.bind(this))
@@ -132,7 +134,7 @@ export default class Net {
 
     this.server.listen(port, '0.0.0.0');
 
-    return external;
+    return port;
   }
 
   /**
@@ -171,8 +173,10 @@ export default class Net {
    * @private
    */
   _socketError(e) {
-    if(this._debug)
+    if(this._debug) {
       console.log('Something went wrong with socket');
+      console.log(e);
+    }
   }
 
   /**
@@ -216,7 +220,7 @@ export default class Net {
     if(d.version == 1) {
       switch(d.type) {
         case 'message':
-          this.onPacket(d.data.message, d.data.user, d.data.timestamp);
+          //this.onPacket(d.data.message, d.data.user, d.data.timestamp);
           break;
 
         case 'ping':
@@ -264,14 +268,23 @@ export default class Net {
     }
   }
 
-  _syncMessages(socket, data) {
-    const messages = this.getMessages(data.timestamp);
-
-    this._writePacket(messages, socket);
+  async syncMessages(timestamp) {
+    this._sendPacket('syncMessages', { timestamp: timestamp }, []);
   }
 
-  _syncMessagesResponse(socket, data) {
-    // TODO
+  async _syncMessages(socket, data) {
+    let messages = await this.getMessages(data.timestamp);
+
+    this._sendPacketSocket('syncMessages_res', { timestamp: data.timestamp, messages: messages }, socket, []);
+  }
+
+  async _syncMessagesResponse(socket, data) {
+    let messages = await this.getMessages(0);
+    messages = _.difference(data.messages, messages);
+
+    for(let message of messages) {
+      this.onPacket(message.message, message.username, message.timestamp);
+    }
   }
 
   /**
