@@ -204,8 +204,11 @@ export default class {
   }
 
   _insertMessage(username, message, timestamp) {
-    const msg = JSON.stringify(this._createMessage(username, message, timestamp));
-    this._messages.insert(msg);
+    sorted.add(
+      this._messages,
+      { username: username, message: message, timestamp: timestamp },
+      this._compareMessage
+    );
   }
 
   async getTimestamp() {
